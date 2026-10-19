@@ -1,0 +1,146 @@
+<!doctype html>
+<!-- test/homework-proof.mjs: a stand-in for a Microsoft Forms quiz. Questions 1 to 4 and 6 are marked up the way Forms does
+     (role=radiogroup labelled by the question title, role=radio options with aria-checked); question 5 uses native radio
+     inputs, like a generic form. Questions 7 and 8 are short answers (input), 9 a long answer (textarea), 10 a short answer
+     in a contenteditable role=textbox, 11 a file upload. 7, 8, 10 and 11 are required (aria-required and a * after the
+     title). The text boxes behave like React-controlled ones: the form's state changes only on an input event whose value
+     differs from the last one the page itself set, so a value set without the events never reaches what Submit sends.
+     Submit posts the picks, the typed answers and the file name to /submit on the test's server, which records each post.
+     The page also notes whether the Maverick cursor was ever shown in it, and how often it moved. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Unit 3 physics quiz</title>
+  <style>
+    body { margin: 0; background: #f3f2f1; font: 15px/1.5 "Segoe UI", sans-serif; color: #201f1e; }
+    main { max-width: 720px; margin: 24px auto 600px; }
+    h1 { font-size: 26px; padding: 24px 32px; margin: 0 0 12px; background: #fff; border-top: 10px solid #03787c; }
+    [data-automation-id="questionItem"] { background: #fff; padding: 20px 32px; margin-bottom: 12px; min-height: 260px; }
+    [data-automation-id="questionTitle"] { font-weight: 600; margin-bottom: 12px; }
+    .req { color: #a4262c; margin-left: 4px; }
+    [role="radio"], label { display: flex; align-items: center; gap: 10px; padding: 8px 4px; cursor: pointer; }
+    [role="radio"]::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #605e5c; }
+    [role="radio"][aria-checked="true"]::before { background: #03787c; box-shadow: inset 0 0 0 3px #fff; }
+    input[type="text"], textarea, [role="textbox"] { display: block; width: 100%; box-sizing: border-box; font: inherit; padding: 8px 10px; border: 1px solid #8a8886; border-radius: 2px; background: #fff; min-height: 38px; }
+    textarea { min-height: 120px; }
+    button { font: 600 15px "Segoe UI", sans-serif; padding: 8px 28px; background: #03787c; color: #fff; border: 0; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Unit 3 physics quiz</h1>
+  <div id="items"></div>
+  <button type="button" data-automation-id="submitButton">Submit</button>
+  <p id="sent" hidden>Thanks, your answers were recorded.</p>
+</main>
+<script>
+  const QS = [
+    ['A ball of mass 2 kg moves at 3 m/s. What is its kinetic energy?', ['6 J', '9 J', '12 J', '18 J']],
+    ['A cyclist travels 120 m in 20 s. What is the cyclist\'s speed?', ['2400 m/s', '100 m/s', '6 m/s', '0.17 m/s']],
+    ['A block has a mass of 200 g and a volume of 50 cm³. What is its density?', ['4 g/cm³', '0.25 g/cm³', '150 g/cm³', '10000 g/cm³']],
+    ['What is the weight of a 5 kg bag on Earth?', ['0.5 N', '5 N', '15 N', '50 N']],
+    ['A 3 kg trolley moves at 4 m/s. What is its momentum?', ['7 kg m/s', '0.75 kg m/s', '12 kg m/s', '1.33 kg m/s']],
+    ['How many goals were scored in the 2018 FIFA World Cup final?', ['2', '3', '4', '6']],
+  ];
+  // [question, kind, required]: the typed and uploaded questions after the choices
+  const TEXTS = [
+    ['In which part of a plant cell does photosynthesis take place?', 'input', true],
+    ['A car travels 300 m in 15 s. What is its speed? Give the number and the unit.', 'input', true],
+    ['Describe what happens to water vapour in the water cycle when it rises and cools.', 'textarea', false],
+    ['Which city hosted the 2016 Summer Olympics?', 'editable', true],
+    ['Upload a photo of your labelled drawing of a plant cell that shows where photosynthesis happens.', 'file', true],
+  ];
+  const state = { text: {}, file: null };
+  const box = document.getElementById('items');
+  const item = (n, q, required) => {
+    const el = document.createElement('div');
+    el.dataset.automationId = 'questionItem';
+    const title = document.createElement('div');
+    title.dataset.automationId = 'questionTitle';
+    const span = document.createElement('span');
+    span.id = `QuestionId_${n}`;
+    span.textContent = `${n}. ${q}`;
+    title.append(span);
+    if (required) { const r = document.createElement('span'); r.className = 'req'; r.setAttribute('aria-label', 'Required'); r.textContent = '*'; title.append(r); }
+    el.append(title);
+    box.append(el);
+    return el;
+  };
+  QS.forEach(([q, opts], i) => {
+    const el = item(i + 1, q, false);
+    if (i === 4) {
+      // a generic form: native radios in labels, grouped by name
+      opts.forEach((o) => {
+        const label = document.createElement('label');
+        const input = Object.assign(document.createElement('input'), { type: 'radio', name: 'q5', value: o });
+        label.append(input, o);
+        el.append(label);
+      });
+    } else {
+      const group = document.createElement('div');
+      group.setAttribute('role', 'radiogroup');
+      group.setAttribute('aria-labelledby', `QuestionId_${i + 1}`);
+      opts.forEach((o) => {
+        const r = document.createElement('div');
+        r.setAttribute('role', 'radio');
+        r.setAttribute('aria-checked', 'false');
+        r.setAttribute('aria-label', o);
+        r.tabIndex = 0;
+        r.textContent = o;
+        r.addEventListener('click', () => { for (const x of group.children) x.setAttribute('aria-checked', String(x === r)); });
+        group.append(r);
+      });
+      el.append(group);
+    }
+  });
+  // React's value tracker, as React-controlled inputs have it: the page's own value sets are remembered, and an input
+  // event changes the form's state only when the box holds something else
+  const controlled = (el, key) => {
+    const desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value');
+    let tracked = '';
+    Object.defineProperty(el, 'value', { configurable: true, get() { return desc.get.call(this); }, set(v) { tracked = String(v); desc.set.call(this, v); } });
+    el.addEventListener('input', () => { const now = desc.get.call(el); if (now !== tracked) { tracked = now; state.text[key] = now; } });
+  };
+  TEXTS.forEach(([q, kind, required], k) => {
+    const n = QS.length + k + 1;
+    const el = item(n, q, required);
+    let f;
+    if (kind === 'file') {
+      f = Object.assign(document.createElement('input'), { type: 'file', id: 'upload', accept: 'image/*,.pdf' });
+      f.addEventListener('change', () => { state.file = f.files[0]?.name ?? null; });
+    } else if (kind === 'editable') {
+      f = document.createElement('div');
+      f.setAttribute('role', 'textbox');
+      f.setAttribute('contenteditable', 'true');
+      f.setAttribute('aria-multiline', 'false');
+      f.addEventListener('input', () => { state.text[`q${n}`] = f.innerText.trim(); });
+    } else {
+      f = document.createElement(kind);
+      if (kind === 'input') f.type = 'text';
+      f.placeholder = 'Enter your answer';
+      f.dataset.automationId = 'textInput';
+      controlled(f, `q${n}`);
+    }
+    f.setAttribute('aria-labelledby', `QuestionId_${n}`);
+    if (required) f.setAttribute('aria-required', 'true');
+    el.append(f);
+  });
+  const picks = () => QS.map((_, i) => (i === 4 ? document.querySelector('input[name="q5"]:checked')?.value
+    : document.querySelectorAll('[role="radiogroup"]')[i > 4 ? i - 1 : i].querySelector('[aria-checked="true"]')?.getAttribute('aria-label')) ?? null);
+  const sent = () => ({ picks: picks(), text: { ...state.text }, file: state.file });
+  window.formState = () => ({ ...sent(), cursorSeen, cursorMoves });
+  let cursorSeen = false;
+  let cursorMoves = 0;
+  new MutationObserver(() => {
+    const c = document.getElementById('maverick-cursor');
+    if (c) cursorSeen = true;
+  }).observe(document.documentElement, { childList: true });
+  new MutationObserver((list) => { if (list.some((m) => m.target.id === 'maverick-cursor')) cursorMoves++; })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['style'], subtree: true });
+  document.querySelector('[data-automation-id="submitButton"]').addEventListener('click', async () => {
+    await fetch('/submit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(sent()) });
+    document.getElementById('sent').hidden = false;
+  });
+</script>
+</body>
+</html>

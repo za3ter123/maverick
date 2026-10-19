@@ -1,0 +1,102 @@
+{
+  "note": "Study-material corpus for test/accuracy-proof.mjs. Each page's text below is the ground truth: the fixture files are rendered from it, and a citation counts as correct only when the cited page here contains the question's support text. Facts marked TRAP differ on purpose from real-world knowledge.",
+  "files": [
+    {
+      "name": "biology-chapter.pdf",
+      "make": "text-pdf",
+      "pages": [
+        {
+          "heading": "Chapter 4: The Cell",
+          "paras": [
+            "The cell is the basic unit of life. Every cell is surrounded by a cell membrane made of a phospholipid bilayer, which controls what enters and leaves the cell.",
+            "The nucleus stores the cell's DNA. In this course, a human body cell is described as holding 48 chromosomes, arranged in 24 pairs.",
+            "The mitochondrion releases energy from glucose during cellular respiration. It was first described by the Danish biologist Henrik Larsen in 1902, who called it the power granule.",
+            "Ribosomes build proteins. A typical liver cell in the textbook's model contains about 13 million ribosomes.",
+            "Plant cells have a cell wall made of cellulose; animal cells do not have a cell wall. Plant cells also contain chloroplasts and a large central vacuole.",
+            "Review: name the organelle that stores DNA, and explain why a cell needs a membrane."
+          ]
+        },
+        {
+          "heading": "Chapter 5: Photosynthesis",
+          "paras": [
+            "Photosynthesis is the process by which green plants make their own food using light energy. The word equation is: carbon dioxide + water, with light, gives glucose + oxygen.",
+            "The balanced equation is 6CO2 + 6H2O -> C6H12O6 + 6O2. The products are glucose and oxygen.",
+            "The light-dependent reactions take place in the thylakoid membranes of the chloroplast. The Calvin cycle takes place in the stroma, where carbon dioxide is fixed into sugar.",
+            "In the school greenhouse experiment (Experiment 4.2), a pondweed released 18 bubbles of oxygen per minute at 10 cm from the lamp and 6 bubbles of oxygen per minute at 30 cm from the lamp.",
+            "Review: explain why the pondweed released fewer bubbles when the lamp was further away."
+          ]
+        },
+        {
+          "lang": "ar",
+          "heading": "الفصل السادس: الجهاز الهضمي",
+          "paras": [
+            "يبدأ الهضم في الفم، حيث يفرز اللعاب إنزيم الأميليز الذي يحلل النشا إلى سكر المالتوز.",
+            "تنتقل اللقمة عبر المريء إلى المعدة بحركة تسمى الحركة الدودية.",
+            "تعمل إنزيمات المعدة بأفضل شكل عند درجة حموضة تساوي 2، ولذلك تفرز المعدة حمض الهيدروكلوريك.",
+            "يبلغ طول الأمعاء الدقيقة في نموذج هذا الكتاب سبعة أمتار تقريبا، وفيها يتم امتصاص معظم الغذاء المهضوم.",
+            "مراجعة: اذكر مكان بداية الهضم، واشرح دور الحركة الدودية."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "physics-chapter-scan.pdf",
+      "make": "scan-pdf",
+      "pages": [
+        {
+          "heading": "Chapter 2: Motion and Free Fall",
+          "paras": [
+            "Average speed = distance / time. For constant acceleration we use v = u + a t and s = u t + 1/2 a t^2.",
+            "In this course we use g = 10 m/s^2 for the acceleration due to gravity near the Earth's surface. Air resistance is ignored.",
+            "Worked example 2.1: A stone is dropped from rest from the top of a cliff and hits the ground after 3 s.",
+            "Its speed on impact is v = 0 + 10 x 3 = 30 m/s.",
+            "The height of the cliff is s = 1/2 x 10 x 3^2 = 45 m."
+          ]
+        },
+        {
+          "heading": "Chapter 3: Heat and Sound",
+          "paras": [
+            "In this course the speed of sound in air is taken as 300 m/s.",
+            "Echo example 3.2: A student claps 150 m from a wall. The echo returns after 2 x 150 / 300 = 1 s.",
+            "Halvorsen's law of cooling (Ingrid Halvorsen, 1931): the time in minutes for a hot object to lose half of its excess temperature equals 4 times its mass in kilograms.",
+            "The element kuwaitium (symbol Kw) melts at 1,284 degrees C. It is used in this course's lab problems as a heat-storage metal."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "history-chapter.docx",
+      "make": "docx",
+      "pages": [
+        {
+          "heading": "Chapter 7: Medieval England",
+          "paras": [
+            "The Battle of Hastings was fought in 1067, when William of Normandy defeated King Harold and became King of England.",
+            "The Domesday Book, a great survey of land and property in England, was completed in 1086.",
+            "Magna Carta was sealed by King John at Runnymede in 1215. It limited the power of the king.",
+            "The Black Death reached England in 1348 and killed about one third of the population, according to this chapter.",
+            "Review: list two ways in which the Norman Conquest changed England."
+          ]
+        },
+        {
+          "heading": "Chapter 8: The Age of Print and Exploration",
+          "paras": [
+            "Johannes Gutenberg built his printing press in Mainz around 1480. Printed books spread new ideas quickly across Europe.",
+            "Christopher Columbus first reached the Caribbean in 1492, sailing with three ships: the Nina, the Pinta and the Santa Maria.",
+            "Vasco da Gama reached Calicut in India in 1498, opening a sea route from Europe to Asia around Africa.",
+            "Review: explain why a sea route to India mattered to European merchants."
+          ]
+        }
+      ]
+    }
+  ],
+  "traps": [
+    { "file": "biology-chapter.pdf", "page": 1, "book": "48 chromosomes (24 pairs)", "real": "46 chromosomes (23 pairs)" },
+    { "file": "biology-chapter.pdf", "page": 1, "book": "mitochondrion first described by Henrik Larsen, 1902", "real": "Koelliker 1857 / Altmann 1890 / Benda named it 1898" },
+    { "file": "physics-chapter-scan.pdf", "page": 1, "book": "g = 10 m/s^2", "real": "9.81 m/s^2" },
+    { "file": "physics-chapter-scan.pdf", "page": 2, "book": "speed of sound in air 300 m/s", "real": "about 343 m/s" },
+    { "file": "history-chapter.docx", "page": 1, "book": "Battle of Hastings 1067", "real": "1066" },
+    { "file": "history-chapter.docx", "page": 2, "book": "Gutenberg's press around 1480", "real": "around 1440" }
+  ],
+  "invented_in_book": ["Henrik Larsen (scientist)", "Halvorsen's law of cooling (made-up law)", "kuwaitium, Kw, melts at 1,284 C (fictional element)"]
+}

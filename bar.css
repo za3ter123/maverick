@@ -1,0 +1,156 @@
+/* Maverick desktop bar (Electron only). Loaded after styles.css into the bar window, which reuses the
+   pop-out markup (#tpl-mini in index.html).
+
+   Shape: one capsule, 52 px tall: the logo, the ask field and the icons on a single row. An answer grows the same
+   slab downward (the morph below), so the bar and the answer are one piece of glass, never a card in a card.
+   Geometry: 8 px padding and 36 px controls, so the slab radius is 18 + 8 = 26 (concentric); the 28 px logo circle
+   is centred on the corner's centre (26, 26). 12 px of transparent margin around the slab holds its shadow, and
+   main.cjs keeps 40 px more below it for the tooltips; clicks on both margins pass through.
+
+   Legibility: the capsule window is transparent, so nothing blurs the desktop behind it. Everything that carries
+   text is therefore opaque: the ask field, the answer area, tooltips, alerts and toasts. 97 % was tried and is not
+   enough: 3 % of a sharp black-on-white document is 8 levels, which reads plainly on a dark bar. Only the toolbar
+   glass is see-through (80 %), where there are icons and no text, so the meeting still shows through the rim.
+   test/glass-proof.mjs proves it with pixels: the bar over pure white and over pure black must match inside the
+   answer and the ask field. The other material, acrylic, is at the end of this file (body.acrylic). */
+
+/* The bar document is about:blank, which is in quirks mode, where an auto-height body fills the window.
+   max-content lets the window follow the content (main.cjs caps the height). */
+body.bar-win { display: block; height: max-content; min-height: 0; background: transparent; overflow: hidden; padding: 12px; }
+
+body.bar-win {
+  /* The icon row's glass: 86 % light, 92 % dark. At 80 % a terminal's white text read through the dark slab (20 % of
+     it is 51 levels); at 92 % it is 20, under what the eye picks out on a busy desktop, and still over the 10 levels
+     test/glass-proof.mjs needs to see the desktop through the row. Nothing blurs it: the window is transparent. */
+  --glass-bar: light-dark(rgb(249 248 245 / .86), rgb(20 25 36 / .92));
+  --glass-read: light-dark(rgb(251 250 247), rgb(20 25 36));
+  --field-solid: light-dark(rgb(255 255 254), rgb(11 15 24));
+  --text-2: light-dark(#3f4656, #cfccc5);
+  --text-3: light-dark(#535a69, #a9a59e);
+}
+body.bar-win .mini {
+  --r-slab: 26px;
+  position: relative; isolation: isolate;
+  display: grid; grid-template-columns: auto auto auto minmax(0, 1fr) auto; align-items: center;
+  height: auto; gap: 0; padding: 8px;
+  border-radius: var(--r-slab);
+  background: var(--glass-bar);
+  box-shadow:
+    inset 0 var(--hair) 0 var(--rim),
+    inset 0 calc(-1 * var(--hair)) 0 light-dark(rgb(0 0 0 / .04), rgb(0 0 0 / .25)),
+    inset 0 0 14px light-dark(rgb(255 255 255 / .35), rgb(255 255 255 / .035)),
+    0 1px 2px light-dark(rgb(0 0 0 / .10), rgb(0 0 0 / .35)),
+    0 10px 24px -10px light-dark(rgb(0 0 0 / .30), rgb(0 0 0 / .65));
+  -webkit-app-region: drag;
+}
+/* Open, the slab turns opaque under the row for reading. The change happens in the row's bottom padding
+   (44 to 52 px), where there is nothing to read, so no text ever sits on the lighter glass and there is no seam. */
+body.bar-win .mini:has(> .mini-alert:not([hidden]), > .src-pick:not([hidden]), > .mini-answer > .answer) { background: linear-gradient(var(--glass-bar) 30px, var(--glass-read) 52px); }
+/* hairline edge: bright where the light hits the top, fading down the sides (a border mask, not decoration) */
+body.bar-win .mini::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  border-radius: inherit; padding: var(--hair);
+  background: linear-gradient(180deg,
+    light-dark(rgb(255 255 255 / 1), rgb(255 255 255 / .30)) 0,
+    light-dark(rgb(0 0 0 / .06), rgb(255 255 255 / .07)) 42px,
+    light-dark(rgb(0 0 0 / .10), rgb(255 255 255 / .10)) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* Only what can be clicked stops the drag. The status text and the logo drag the bar like the glass around them. */
+body.bar-win :is(button, input, .mini-answer, .mini-alert, .tip, .share-badge) { -webkit-app-region: no-drag; }
+
+/* ---- the row: logo | status | Hidden badge | ask field | icons. The row's own box is dropped, so its parts sit on the slab grid. */
+body.bar-win .bar { display: contents; }
+body.bar-win .bar .logo { grid-column: 1; grid-row: 1; display: grid; width: 28px; height: 28px; margin: 0 4px; }
+body.bar-win .bar .pill { grid-column: 2; grid-row: 1; height: 28px; margin-left: 4px; padding: 0 10px; color: var(--text); background: var(--field-solid); }
+/* The bar's badge is the shield alone, 28 px in every state, so a label that changes never moves the ask field. The
+   words stay in the tooltip, the header badge and, for screen readers, the hidden label. Visible: a filled amber shield. */
+body.bar-win .bar .share-badge { grid-column: 3; grid-row: 1; width: 28px; height: 28px; margin-left: 4px; padding: 0; justify-content: center; background: none; color: var(--text-3); }
+body.bar-win .bar .share-badge .i { --is: 18; }
+body.bar-win .bar .share-badge > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+body.bar-win .bar .share-badge[data-state="visible"] { color: var(--warn); font-weight: inherit; }
+body.bar-win .bar .share-badge[data-state="visible"] .i { stroke: light-dark(#ffffff, rgb(24 24 28)); }
+body.bar-win .bar .ask { grid-column: 4; grid-row: 1; margin: 0 6px 0 4px; }
+body.bar-win .bar .bar-acts { grid-column: 5; grid-row: 1; margin: 0; gap: 2px; justify-content: flex-end; }
+body.bar-win .ib[data-cmd="theme"] { display: grid; }
+body.bar-win .ib:hover { background: var(--fill-2); }
+
+/* ask field: a nearly solid capsule, radius 18 = 26 - 8. The send button appears once there is something to send. */
+body.bar-win .mini .ask input {
+  height: var(--ctl); padding: 0 calc(var(--ctl-sm) + var(--s-3)) 0 var(--s-4);
+  background: var(--field-solid);
+  box-shadow: inset 0 0 0 var(--hair) light-dark(rgb(0 0 0 / .1), rgb(255 255 255 / .1)), inset 0 1px 2px light-dark(rgb(0 0 0 / .04), rgb(0 0 0 / .25));
+}
+/* no room kept for the send button while it is hidden, so "Ask Maverick" fits beside a long timer at any scaling */
+body.bar-win .mini .ask input:placeholder-shown { padding-right: var(--s-3); }
+body.bar-win .mini .ask input:hover { box-shadow: inset 0 0 0 var(--hair) light-dark(rgb(0 0 0 / .2), rgb(255 255 255 / .2)), inset 0 1px 2px light-dark(rgb(0 0 0 / .04), rgb(0 0 0 / .25)); }
+body.bar-win .mini .ask input:focus-visible { box-shadow: inset 0 0 0 1.5px var(--accent), var(--ring); }
+body.bar-win .mini .ask .send { right: 4px; transition: transform var(--dur-2) var(--spring), opacity var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease), visibility 0s; }
+/* hidden, not just transparent, so Tab skips it; visibility flips after the fade */
+body.bar-win .mini .ask:has(input:placeholder-shown) .send { opacity: 0; transform: scale(.8); visibility: hidden; transition-delay: 0s, 0s, 0s, var(--dur-1); }
+
+/* ---- below the row: the alert line and the answer, on the nearly solid part of the slab */
+body.bar-win :is(.mini-alert, .mini-answer, .sr) { grid-column: 1 / -1; }
+/* the Sources choices: a row under the bar, opened by its Sources button, on the opaque part of the slab */
+body.bar-win .src-pick { grid-column: 1 / -1; justify-self: end; margin-top: 8px; background: var(--field-solid); box-shadow: inset 0 0 0 var(--hair) light-dark(rgb(0 0 0 / .08), rgb(255 255 255 / .08)); -webkit-app-region: no-drag; }
+body.bar-win .mini-alert { margin-top: 8px; border-radius: 18px; }
+body.bar-win .mini-answer { margin-top: 8px; } /* starts at 52 px, where the slab is already opaque */
+body.bar-win .mini-answer:has(> .mini-empty) { display: none; }
+/* the answer sits on the slab itself: no plate, no ring; spacing separates it from the row above */
+body.bar-win .mini-answer .answer { background: none; box-shadow: none; border-radius: 0; padding: 10px 2px 6px 12px; animation: none; }
+body.bar-win .mini-answer .md { max-height: 380px; }
+
+/* Morph: when an answer opens, the slab grows out of the bar as one shape. The clip starts at the old
+   height (--from, set in app.mjs) and eases open to the full slab, corners intact; the answer fades up after it. */
+body.bar-win .mini.morph { animation: morph var(--dur-3) var(--ease-sheet); }
+body.bar-win .mini.morph .mini-answer { animation: rise var(--dur-3) var(--ease) 60ms both; }
+@keyframes morph { from { clip-path: inset(0 0 calc(100% - var(--from, 100%)) 0 round var(--r-slab)); } to { clip-path: inset(0 0 0 0 round var(--r-slab)); } }
+
+/* The share check's canary (src/canary.mjs): eight 2 px neutral grey cells, bright and dark. main.cjs looks for it in a
+   real capture of the screen, so it is opaque, fixed and quiet. Every grey stays at 72 or under: desktopCapturer on this
+   PC returns about 1.6 times the page's value plus 6 and clips everything from 156 up to white (measured), so a lighter
+   pattern would vanish from the capture and read as hidden. Dark theme: on the glass under the logo. Light theme: inside
+   the navy logo's dome, above the M cut, where the dark cells sit on the logo's own dark. */
+body.bar-win .canary { display: flex; position: absolute; left: 18px; top: 45px; pointer-events: none; }
+body.bar-win .canary i { width: 2px; height: 2px; background: light-dark(rgb(28 28 28), rgb(24 24 24)); }
+body.bar-win .canary i.on { background: light-dark(rgb(72 72 72), rgb(64 64 64)); }
+:root[data-theme="light"] body.bar-win .canary { top: 18px; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body.bar-win .canary { top: 18px; } }
+
+/* Tooltips hang into the room main.cjs keeps under the slab; they carry text, so they are nearly solid too. */
+body.bar-win .tip { background: var(--glass-read); backdrop-filter: none; }
+
+/* Toasts sit under the bar, as their own capsules, and count toward the window height. */
+body.bar-win .toasts { position: static; max-width: none; }
+body.bar-win .toasts .toast { margin-top: var(--s-2); background: var(--glass-read); backdrop-filter: none; border-radius: 22px; }
+body.bar-win .toasts .toast.error { background: color-mix(in srgb, var(--danger) 8%, var(--glass-read)); }
+
+/* ---- Variant A: acrylic (desktop/main.cjs, barMaterial 'acrylic'). The window is the slab: no margin, and Windows
+   draws the blur, the tint, the 8 px corners and the shadow (main.cjs turns off the accent-coloured border). The row
+   is light glass over real blur; the ask field and the answer are opaque, as in the capsule. There is no room outside
+   the slab for the glass tooltips, so they show inside the ask field instead (anchored to it), still in the page:
+   a system tooltip would be its own window, and screen shares would show it. */
+body.bar-win.acrylic { padding: 0; }
+body.bar-win.acrylic {
+  --glass-bar: light-dark(rgb(255 255 255 / .2), rgb(18 18 22 / .25));
+  --glass-read: light-dark(rgb(250 250 252), rgb(24 24 28)); /* the text areas are opaque here too; the blur is for the row */
+  --field-solid: light-dark(rgb(255 255 255), rgb(14 14 17));
+}
+body.bar-win.acrylic .mini { --r-slab: 0px; border-radius: 0; box-shadow: inset 0 var(--hair) 0 var(--rim); }
+body.bar-win.acrylic .mini::before { display: none; }
+body.bar-win.acrylic .mini .ask input { anchor-name: --ask; }
+body.bar-win.acrylic :is(.tip, .float-tip) {
+  position: fixed; position-anchor: --ask; inset: auto; top: anchor(top); left: anchor(left); margin: 0;
+  width: anchor-size(width); height: anchor-size(height); max-width: none; translate: none; transform-origin: 50% 50%;
+  justify-content: space-between; padding: 0 12px 0 var(--s-4); border-radius: var(--r-full);
+  transition: none; /* a swap, not a crossfade: it takes the field's place */
+  background: var(--field-solid); box-shadow: inset 0 0 0 var(--hair) light-dark(rgb(0 0 0 / .1), rgb(255 255 255 / .1));
+}
+/* the field's own text steps aside while a tip is in it (the input's text layer can paint over the tip) */
+body.bar-win.acrylic .mini:has(.bar-acts .ib:is(:hover, :focus-visible)) .ask input,
+body.bar-win.acrylic .mini:has(.bar-acts .ib:is(:hover, :focus-visible)) .ask input::placeholder { color: transparent; }
+body.bar-win.acrylic .float-tip { display: flex; align-items: center; white-space: nowrap; overflow: hidden; }
+
+/* Live captions (batch 3): the latest transcript line under the row while Maverick listens, on an opaque plate like the Sources row. */
+body.bar-win .mini-caption { grid-column: 1 / -1; margin: 8px 0 0; padding: 6px 12px; border-radius: 18px; box-shadow: none; background: var(--field-solid); }

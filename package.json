@@ -1,0 +1,86 @@
+{
+  "name": "maverick",
+  "version": "0.2.0",
+  "description": "Maverick, a local-first AI meeting copilot",
+  "license": "MIT",
+  "author": "za3ter123",
+  "repository": "github:za3ter123/maverick",
+  "homepage": "https://github.com/za3ter123/maverick",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "web": "node serve.mjs",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "44.4.3",
+    "electron-builder": "26.17.0"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.3.289"
+  },
+  "build": {
+    "appId": "com.za3ter123.maverick",
+    "productName": "Maverick",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/main.cjs",
+      "desktop/preload.cjs",
+      "desktop/publik.cjs",
+      "desktop/icon.*",
+      "desktop/app-audio.exe",
+      "serve.mjs",
+      "index.html",
+      "styles.css",
+      "bar.css",
+      "icon.svg",
+      "maverick.config.json",
+      "src/**",
+      "package.json",
+      "!node_modules/**",
+      "node_modules/pdfjs-dist/build/pdf.min.mjs",
+      "node_modules/pdfjs-dist/build/pdf.worker.min.mjs",
+      "!node_modules/@napi-rs/**",
+      "!test/**",
+      "LICENSE",
+      "THIRD-PARTY-NOTICES.md"
+    ],
+    "asarUnpack": [
+      "desktop/app-audio.exe"
+    ],
+    "extraResources": [
+      {
+        "from": ".",
+        "to": ".",
+        "filter": [
+          "publik-app-token.txt"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "desktop/icon.ico"
+    },
+    "nsis": {
+      "artifactName": "Maverick-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Maverick-${version}-portable.${ext}"
+    }
+  }
+}

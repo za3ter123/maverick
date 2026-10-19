@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="cue-token" content="__CUE_TOKEN__">
+  <meta name="color-scheme" content="light dark">
+  <title>Maverick, a local meeting copilot</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/app.mjs"></script>
+</head>
+<body>
+  <svg id="sprite" class="sprite" aria-hidden="true">
+    <symbol id="i-logo" viewBox="24 24 80 80"><path d="M35.2 91.759V52.8H48L64 72L80 52.8H92.8V91.759A40 40 0 1 0 35.2 91.759ZM48 72.32L60.8 87.68H67.2L80 72.32V100.661A40 40 0 0 1 48 100.661Z"/></symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+    <symbol id="i-pip" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 13.5A8.5 8.5 0 1 1 10.5 3.5a6.5 6.5 0 0 0 10 10z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 10.5 13.5M21 3l-6.5 18-4-7.5L3 9.5z"/></symbol>
+    <symbol id="i-reply" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 20 12z"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.6M12 17h.01"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+    <symbol id="i-notes" viewBox="0 0 24 24"><path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5M9 12.5h7M9 16.5h5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-deep" viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5l9 4.5 9-4.5"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M20 11.5A8 8 0 1 1 17.7 6"/><path d="M20 4v5h-5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M6.5 21V4M6.5 4h11l-2 4 2 4H6.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 5 6.3v5.2c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6.3z"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 3.5 5 6.3v5.2c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6.3z"/><path d="m9 12.2 2.2 2.2 3.9-4"/></symbol>
+    <symbol id="i-shield-alert" viewBox="0 0 24 24"><path d="M12 3.5 5 6.3v5.2c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6.3z"/><path d="M12 8.5v4.2M12 15.8h.01"/></symbol>
+    <symbol id="i-shield-alert-fill" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" d="M12 3.5 5 6.3v5.2c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6.3z"/><path d="M12 8.5v4.2M12 15.8h.01"/></symbol>
+    <symbol id="i-solve" viewBox="0 0 24 24"><path d="M9.5 17.5h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1v1.6h5v-1.6c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3z"/></symbol>
+    <symbol id="i-subs" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 11.5h4M14 11.5h3M7 15h7"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 21H20M8 7.5h8"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m4 18 5.5-5 4 3.5 2.5-2 4 3.5"/></symbol>
+    <symbol id="i-keys" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M8 14h8"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-check-list" viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/></symbol>
+    <symbol id="i-memory" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="13" cy="18" r="2.5"/><path d="M8.5 6.8l7-.6M7.2 9.2l4.5 6.6M17.3 8.4l-3.4 7.2"/></symbol>
+  </svg>
+
+  <a class="skip" href="#ask-input">Skip to Ask</a>
+
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"><svg class="i"><use href="#i-logo"/></svg></span>
+      <div class="brand-text">
+        <strong>Maverick</strong>
+        <!-- One quiet line, one dot. The dot shows the most urgent state: live, then a problem, then ready. -->
+        <p class="status"><i class="dot" aria-hidden="true"></i><span id="st-rec" class="pill"><span>Idle</span><time class="clock"></time><span class="src"></span></span><span id="st-ai" class="pill busy"><span>Checking AI</span></span><span id="st-local" class="pill local" data-tip="Live answers, reasoning, vision and transcription all run on this computer" hidden><span>on this PC</span></span><span id="st-egress" class="pill local" hidden><span></span></span><span id="st-share" class="share-badge" data-state="checking" hidden><svg class="i xs"><use href="#i-shield"/></svg><span>Checking</span></span></p>
+      </div>
+    </div>
+    <nav class="controls" aria-label="Meeting controls">
+      <button id="btn-share" class="btn primary" data-tip="Pick the Teams tab, or your entire screen, and turn on audio"><svg class="i"><use href="#i-screen"/></svg><span>Share meeting</span></button>
+      <button id="btn-mic" class="btn" data-tip="Transcribe your microphone as You"><svg class="i"><use href="#i-mic"/></svg><span>Mic</span></button>
+      <button id="btn-pip" class="btn" data-tip="Always-on-top command bar"><svg class="i"><use href="#i-pip"/></svg><span>Pop out</span></button>
+      <button id="btn-end" class="btn danger" data-tip="Stop and write meeting notes" disabled><svg class="i"><use href="#i-notes"/></svg><span>End &amp; summarize</span></button>
+      <span class="sep"></span>
+      <button id="btn-library" class="btn icon ghost" data-tip="Library: your files" aria-label="Library"><svg class="i"><use href="#i-book"/></svg></button>
+      <button id="btn-homework" class="btn icon ghost" data-tip="Homework: draft answers from your material or the web" aria-label="Homework"><svg class="i"><use href="#i-check-list"/></svg></button>
+      <button id="btn-history" class="btn icon ghost" data-tip="Past meetings" aria-label="Past meetings"><svg class="i"><use href="#i-history"/></svg></button>
+      <button id="btn-memory" class="btn icon ghost" data-tip="Memory: your notes from meetings and homework, linked" aria-label="Memory" hidden><svg class="i"><use href="#i-memory"/></svg></button>
+      <button id="btn-settings" class="btn icon ghost" data-tip="Settings" aria-label="Settings"><svg class="i"><use href="#i-settings"/></svg></button>
+      <button id="btn-theme" class="btn icon ghost" data-tip="Toggle light or dark" aria-label="Toggle theme"><svg class="i"><use href="#i-sun"/></svg></button>
+    </nav>
+  </header>
+
+  <main class="grid">
+    <!-- The screen area is one line until something is shared; then it becomes the preview. -->
+    <section class="card screen-card" aria-labelledby="h-screen">
+      <div class="card-head">
+        <h2 id="h-screen">Shared screen</h2>
+      </div>
+      <div class="screen">
+        <video id="preview" muted autoplay playsinline></video>
+        <div id="screen-empty" class="share-line">
+          <div class="idle">
+            <svg class="i"><use href="#i-screen"/></svg>
+            <p>Not listening. Share the Teams tab, or Entire screen with system audio.</p>
+            <button type="button" class="btn" data-share>Share</button>
+          </div>
+          <div class="denied" role="alert">
+            <svg class="i"><use href="#i-alert"/></svg>
+            <p><strong>Screen sharing didn’t start.</strong> <span id="denied-msg"></span></p>
+            <button type="button" class="btn" data-share>Try again</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Collapsed until the first line arrives, or while listening for it. -->
+    <section class="card transcript-card" aria-labelledby="h-transcript">
+      <div class="card-head">
+        <h2 id="h-transcript">Transcript</h2>
+        <span class="head-tools">
+          <span id="tr-status" class="meta tr-status"></span>
+          <span class="meters" aria-hidden="true">
+            <span class="meter" data-tip="Meeting audio level" hidden><em>Meeting</em><b id="lvl-meeting"></b></span>
+            <span class="meter" data-tip="Microphone level" hidden><em>You</em><b id="lvl-mic"></b></span>
+          </span>
+          <button id="btn-subs" type="button" class="btn sm ghost" aria-pressed="true"><svg class="i sm"><use href="#i-subs"/></svg><span>Subtitles</span></button>
+          <button id="btn-flag" type="button" class="btn sm ghost" data-tip="Flag this moment for the notes (Alt 5)" aria-keyshortcuts="Alt+5" disabled><svg class="i sm"><use href="#i-flag"/></svg><span>Flag</span></button>
+        </span>
+      </div>
+      <ol id="transcript" class="transcript" tabindex="0" aria-label="Transcript"></ol>
+      <p id="transcript-empty" class="tr-empty"><i class="dot" aria-hidden="true"></i>Listening. The first line appears after the next pause.</p>
+      <button id="tr-jump" class="jump" type="button" hidden><svg class="i"><use href="#i-down"/></svg><span>Jump to live</span></button>
+    </section>
+
+    <section class="card copilot" aria-labelledby="h-copilot">
+      <h2 id="h-copilot" class="vh">Copilot</h2>
+      <div class="actions" role="group" aria-label="Copilot actions">
+        <button class="act" data-action="answer" aria-keyshortcuts="Alt+1" data-tip="Answer (Alt 1)"><svg class="i"><use href="#i-reply"/></svg><span>Answer</span></button>
+        <button class="act" data-action="explain" aria-keyshortcuts="Alt+2" data-tip="Explain screen (Alt 2)"><svg class="i"><use href="#i-eye"/></svg><span>Explain<span class="long"> screen</span></span></button>
+        <button class="act" data-action="followup" aria-keyshortcuts="Alt+3" data-tip="Follow-ups (Alt 3)"><svg class="i"><use href="#i-help"/></svg><span>Follow-ups</span></button>
+        <button class="act" data-action="recap" aria-keyshortcuts="Alt+4" data-tip="Recap (Alt 4)"><svg class="i"><use href="#i-list"/></svg><span>Recap</span></button>
+      </div>
+      <div class="sources-row">
+        <div class="seg sources" role="radiogroup" aria-label="Sources">
+          <label data-tip="Answers from the meeting and the shared screen"><input type="radio" name="sources" value="meeting">Meeting</label>
+          <label data-tip="Answers from the web, through Claude Code, with links"><input type="radio" name="sources" value="web">Web</label>
+          <label data-tip="Answers only from the files in your Library, with page citations"><input type="radio" name="sources" value="material">My material only</label>
+        </div>
+      </div>
+      <div id="banners" class="banners"></div>
+      <div id="answers" class="answers">
+        <div class="empty first-run" id="first-run" hidden>
+          <p><strong>Get ready for your first meeting</strong></p>
+          <div class="publik-offer" id="fr-publik" role="region" aria-labelledby="fr-publik-head" hidden>
+            <p id="fr-publik-head"><b>Use publik API</b></p>
+            <p id="fr-publik-text"></p>
+            <div class="acts" id="fr-publik-acts"></div>
+          </div>
+          <ol class="checklist">
+            <li data-step="ai"><span class="tick" aria-hidden="true"><svg class="i sm"><use href="#i-check"/></svg></span><span class="step"><b>AI ready</b><small id="fr-ai">Checking the assistant</small></span></li>
+            <li data-step="share"><span class="tick" aria-hidden="true"><svg class="i sm"><use href="#i-check"/></svg></span><span class="step"><b>Share the meeting with audio</b><small>Teams in a tab: pick the tab. Teams app: pick Entire screen and turn on system audio.</small></span><button type="button" class="btn sm" data-share>Share</button></li>
+            <li data-step="mic"><span class="tick" aria-hidden="true"><svg class="i sm"><use href="#i-check"/></svg></span><span class="step"><b>Your mic, with headphones</b><small>Optional. Adds your side as You. Headphones stop the mic hearing the meeting twice.</small></span><button type="button" class="btn sm" data-mic>Mic</button></li>
+          </ol>
+        </div>
+        <div class="empty" id="answers-empty">
+          <svg class="i glyph"><use href="#i-reply"/></svg>
+          <p><strong>Ready when the question comes</strong></p>
+          <p>When someone asks you something, press Answer. Maverick reads the last two minutes and the shared screen, then suggests what to say.</p>
+        </div>
+      </div>
+      <form class="ask" autocomplete="off">
+        <input id="ask-input" name="q" placeholder="Ask about the meeting" aria-label="Ask Maverick" aria-keyshortcuts="/">
+        <kbd class="hint" aria-hidden="true">/</kbd>
+        <button class="btn primary icon send" aria-label="Send"><svg class="i"><use href="#i-send"/></svg></button>
+      </form>
+      <p class="keys" aria-hidden="true"><kbd>Alt 1</kbd> to <kbd>Alt 4</kbd> run actions, <kbd>Alt 5</kbd> flags a moment, <kbd>/</kbd> focuses Ask, <kbd>Esc</kbd> stops an answer.</p>
+    </section>
+  </main>
+
+  <dialog id="dlg-share" class="dlg" aria-labelledby="share-title">
+    <header class="dlg-head"><h2 id="share-title" tabindex="-1" autofocus>Share the meeting with audio</h2><button type="button" class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="dlg-body">
+      <ol class="share-steps">
+        <li><b>Teams in a browser tab:</b> pick that tab in the next window and keep <em>Also share tab audio</em> on.</li>
+        <li><b>Teams desktop app:</b> pick <em>Entire screen</em> and turn on <em>Also share system audio</em>. A single app window has no audio.</li>
+      </ol>
+      <p class="foot">Maverick itself cannot be picked, so it never shares its own window.</p>
+    </div>
+    <footer class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="button" id="share-go" class="btn primary"><svg class="i"><use href="#i-screen"/></svg><span>Continue</span></button>
+    </footer>
+  </dialog>
+
+  <!-- Settings: a sidebar of sections and one pane at a time. Changes apply as they are made; the X is Done. -->
+  <dialog id="dlg-settings" class="dlg wide settings" aria-labelledby="set-title">
+    <form id="settings-form" method="dialog" novalidate>
+      <header class="dlg-head"><h2 id="set-title" tabindex="-1" autofocus>Settings</h2><button id="set-save" class="btn icon ghost" value="save" aria-label="Done" data-tip="Done. Changes apply as you make them"><svg class="i"><use href="#i-x"/></svg></button></header>
+      <div class="set-wrap">
+        <nav class="set-nav" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
+          <button type="button" role="tab" id="tab-general" data-pane-tab="general" aria-controls="set-general" aria-selected="true"><svg class="i sm"><use href="#i-sun"/></svg><span>General</span></button>
+          <button type="button" role="tab" id="tab-models" data-pane-tab="models" aria-controls="set-models" aria-selected="false" tabindex="-1"><svg class="i sm"><use href="#i-deep"/></svg><span>Models</span></button>
+          <button type="button" role="tab" id="tab-connections" data-pane-tab="connections" aria-controls="set-connections" aria-selected="false" tabindex="-1"><svg class="i sm"><use href="#i-globe"/></svg><span>Connections</span></button>
+          <button type="button" role="tab" id="tab-desktop" data-pane-tab="desktop" aria-controls="desk-settings" aria-selected="false" tabindex="-1" hidden><svg class="i sm"><use href="#i-screen"/></svg><span>Desktop app</span></button>
+          <button type="button" role="tab" id="tab-hotkeys" data-pane-tab="hotkeys" aria-controls="desk-hotkeys" aria-selected="false" tabindex="-1" hidden><svg class="i sm"><use href="#i-keys"/></svg><span>Hotkeys</span></button>
+        </nav>
+        <div class="dlg-body set-body">
+          <section id="set-general" class="set-pane" role="tabpanel" aria-labelledby="tab-general" data-pane="general">
+            <p class="section-title">Appearance</p>
+            <div class="seg" role="radiogroup" aria-label="Appearance">
+              <label><input type="radio" name="appearance" value="" aria-describedby="err-appearance">Automatic</label>
+              <label><input type="radio" name="appearance" value="light" aria-describedby="err-appearance">Light</label>
+              <label><input type="radio" name="appearance" value="dark" aria-describedby="err-appearance">Dark</label>
+            </div>
+            <small id="err-appearance" class="field-msg"></small>
+            <p class="foot">Automatic follows the light or dark setting of Windows.</p>
+
+            <p class="section-title">Languages and words</p>
+            <div class="group">
+              <label class="row"><span>Meeting languages</span><input id="set-languages" name="languages" autocomplete="off" placeholder="Auto" aria-describedby="err-languages"><small>A hint for transcription. Auto expects Arabic, English or both.</small><small id="err-languages" class="field-msg"></small></label>
+              <label class="row"><span>Subtitles</span><select id="set-subtitles" name="subtitles"><option value="off">Off</option><option value="auto">Auto</option><option value="English">Always English</option><option value="Arabic">Always Arabic</option></select><small>A translation under each transcript line. Auto puts Arabic lines in English and English lines in Arabic. The live model writes them when it is free, so they never slow down an answer.</small></label>
+              <label class="row"><span>Answer language</span><select id="set-answer-lang" name="answerLang"><option value="auto">Same as the question</option><option value="English">English</option><option value="Arabic">Arabic</option></select></label>
+              <label class="row stack"><span>Answer style</span><textarea id="set-style" name="style" rows="2" spellcheck="false" placeholder="Like: answer in bullets, at most 3 sentences"></textarea><small>Your rules for every answer: Answer, Ask, Explain, Solve, Follow-ups and Recap.</small></label>
+              <label class="row stack"><span>Vocabulary</span><textarea id="set-vocab" name="vocab" rows="3" spellcheck="false" placeholder="Names, products and jargon, separated by commas or new lines"></textarea><small>Given to transcription as spellings, and used to fix misheard words.</small></label>
+              <label class="row check"><span>From your files</span><input id="set-file-vocab" name="fileVocab" type="checkbox" aria-describedby="err-fileVocab"><small id="file-vocab-note">Names and acronyms found in your Library are added to the vocabulary.</small><small id="err-fileVocab" class="field-msg"></small></label>
+              <label class="row check"><span>Fix unclear and misheard words with the live model</span><input id="set-fix" name="fixWords" type="checkbox" aria-describedby="err-fixWords"><small>Changed words are underlined; hover one to see what was heard.</small><small id="err-fixWords" class="field-msg"></small></label>
+            </div>
+            <p class="foot">Speaker labels such as Speaker 1 are estimates from each voice. Click a label in the transcript to rename that speaker.</p>
+          </section>
+
+          <section id="set-models" class="set-pane" role="tabpanel" aria-labelledby="tab-models" data-pane="models" hidden>
+            <p class="section-title">What each task runs on</p>
+            <div id="role-cards" class="role-cards"></div>
+            <p class="section-title">Transcription</p>
+            <div class="group">
+              <label class="row"><span>Longest chunk, in seconds</span><input id="set-chunk" name="chunkSeconds" type="number" min="4" max="30" step="1" required aria-describedby="err-chunkSeconds"><small>Speech goes to transcription after a short pause, or at this length.</small><small id="err-chunkSeconds" class="field-msg"></small></label>
+            </div>
+            <p class="foot">Library search always runs on this PC, with embeddinggemma in Ollama.</p>
+          </section>
+
+          <section id="set-connections" class="set-pane" role="tabpanel" aria-labelledby="tab-connections" data-pane="connections" hidden>
+            <div id="provider-fields"></div>
+            <div class="group"><label class="row"><span>Add a connection</span><select id="conn-add" aria-label="Add a connection"></select><small>Add as many as you like, several of one type too, each with its own key.</small></label></div>
+            <p id="web-share-note" class="foot">The browser version cannot hide itself from screen shares: anything you share, including this tab, shows Maverick. The desktop app can.</p>
+            <p class="foot">Ollama, or an OpenAI-compatible server on this computer, keeps meeting audio, transcripts and screen frames on this PC. Local CLI agents and cloud providers receive the transcript and screen frames you send them. Keys are saved only in this browser.</p>
+          </section>
+
+          <section id="desk-settings" class="set-pane" role="tabpanel" aria-labelledby="tab-desktop" data-pane="desktop" hidden>
+            <p class="section-title">Screen shares</p>
+            <div class="group">
+              <label class="row check"><span>Hide Maverick when I share my screen</span><input id="set-hide-share" name="hideFromShare" type="checkbox" checked aria-describedby="err-hideFromShare"><small>Windows content protection, the flag password managers use: screen shares and screenshots leave Maverick out.</small><small id="err-hideFromShare" class="field-msg"></small></label>
+              <label class="row check"><span>Also hide the tray icon</span><input id="set-hide-tray" name="hideTray" type="checkbox" checked aria-describedby="err-hideTray"><small id="hide-tray-note">Without it, Ctrl Shift Enter brings the bar back.</small><small id="err-hideTray" class="field-msg"></small></label>
+            </div>
+            <p class="section-title">Capture and recording</p>
+            <div class="group">
+              <label class="row"><span>Share meeting captures</span><select id="set-source" name="captureSource"></select><small>No picker in the desktop app. A window is heard on its own, only its app’s sound (Windows 10 2004 or later), so YouTube or a game stays out; the entire screen hears everything this PC plays.</small></label>
+              <label class="row"><span>Record meetings</span><select id="set-record" name="recordMode"><option value="off">Off</option><option value="audio">Audio only</option><option value="screen">Audio + screen</option></select><small>Starts with the meeting and stops at End &amp; summarize. The sound is what Maverick hears: this PC and your mic. A change applies from the next meeting.</small></label>
+              <label class="row"><span>Record the picture of</span><select id="set-record-source" name="recordSource"></select><small>For Audio + screen. A window is recorded with only its app’s sound and your mic. It keeps recording while other windows cover it; while it is minimized the picture stays frozen. Maverick never shows in its own recordings while it hides.</small></label>
+              <label class="row"><span>Save recordings in</span><span class="field"><button type="button" id="set-record-dir" class="btn sm">Choose folder</button></span><small id="record-dir-note"></small><small>Choose folder opens the Windows folder window, which screen shares show: pick the folder when you are not sharing.</small></label>
+            </div>
+            <p class="foot">Maverick checks every 10 seconds that a capture of the screen does not contain it.</p>
+            <p class="section-title">Memory</p>
+            <div class="group">
+              <label class="row"><span>Vault folder</span><span class="field"><button type="button" id="set-vault" class="btn sm">Open vault folder</button></span><small id="vault-note"></small><small>A note for each finished meeting and homework, as Markdown files with [[links]]. Open the folder as a vault in Obsidian to browse them there too. They stay on this PC.</small></label>
+            </div>
+          </section>
+
+          <section id="desk-hotkeys" class="set-pane" role="tabpanel" aria-labelledby="tab-hotkeys" data-pane="hotkeys" hidden>
+            <p class="section-title">Global hotkeys</p>
+            <div id="hotkey-fields" class="group hotkeys"></div>
+            <p class="foot">They work while Teams has focus. Click a key and press the new keys; Backspace clears one. Avoid Ctrl+Enter, which Teams uses to send. To move the bar, drag it, or focus it (Ctrl+Shift+Space) and press the arrow keys; Shift+arrows move it further. Arrow keys are never taken from other apps.</p>
+          </section>
+        </div>
+      </div>
+      <footer class="dlg-foot set-foot">
+        <small id="set-unsaved" class="field-msg" role="alert"></small>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-history" class="dlg wide" aria-labelledby="hist-title">
+    <header class="dlg-head"><h2 id="hist-title" tabindex="-1">Past meetings</h2><span id="hist-usage" class="meta"></span><button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="dlg-body history">
+      <div class="hist-side">
+        <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="hist-q" autocomplete="off" placeholder="Search notes and transcripts" aria-label="Search meetings"></label>
+        <ul id="hist-list" class="hist-list"></ul>
+      </div>
+      <article id="hist-detail" class="hist-detail md"><p class="muted">Pick a meeting.</p></article>
+      <div class="empty hist-empty">
+        <svg class="i glyph"><use href="#i-history"/></svg>
+        <p><strong>No meetings yet</strong></p>
+        <p>End a meeting and its notes land here.</p>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-library" class="dlg wide" aria-labelledby="lib-title">
+    <header class="dlg-head"><h2 id="lib-title" tabindex="-1" autofocus>Library</h2><span id="lib-usage" class="meta"></span><button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="dlg-body library">
+      <label class="drop" id="lib-drop">
+        <input id="lib-input" type="file" multiple>
+        <svg class="i glyph"><use href="#i-plus"/></svg>
+        <span><strong>Drop files here</strong> or choose them</span>
+        <small id="lib-note">PDF, PNG, JPG, WebP, .docx, .txt and .md. They stay on this PC.</small>
+      </label>
+      <ul id="lib-list" class="lib-list"></ul>
+      <p class="foot"><span id="lib-read-note">Scanned pages and images are read by the Vision model.</span> The file chooser is a Windows window, so a screen share can see it; dragging files in does not show.</p>
+    </div>
+  </dialog>
+
+  <!-- Homework: the worksheets in a sidebar; the picked one's questions as numbered cards; Fill a form in its own tab. -->
+  <dialog id="dlg-homework" class="dlg wide hw-dlg" aria-labelledby="hw-title">
+    <header class="dlg-head"><h2 id="hw-title" tabindex="-1" autofocus>Homework</h2><span id="hw-usage" class="meta"></span><button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="dlg-body homework">
+      <aside class="hw-side" aria-label="Worksheets">
+        <label class="drop" id="hw-drop">
+          <input id="hw-input" type="file">
+          <svg class="i glyph"><use href="#i-plus"/></svg>
+          <span><strong>Add a worksheet</strong></span>
+          <small id="hw-note">PDF, photo, .docx, .txt or .md. It stays on this PC.</small>
+        </label>
+        <button type="button" class="btn sm ghost hw-paste" data-hw="new"><svg class="i sm"><use href="#i-notes"/></svg><span>Paste text instead</span></button>
+        <ul id="hw-list" class="hist-list hw-list"></ul>
+      </aside>
+      <section class="hw-main">
+        <div class="hw-top">
+          <div id="hw-form-open" class="seg hw-tabs" role="tablist" aria-label="Homework" hidden>
+            <button type="button" role="tab" data-hw-tab="sheet" aria-selected="true">Worksheet</button>
+            <button type="button" role="tab" data-hw-tab="form" aria-selected="false">Fill a form</button>
+          </div>
+          <div class="seg sources" role="radiogroup" aria-label="Answer from">
+            <label data-tip="Drafts only from the files in your Library, with page citations. Runs on this PC."><input type="radio" name="hw-source" value="material">My material</label>
+            <label data-tip="Drafts from the web, through Claude Code, with links. Sends the question off this PC."><input type="radio" name="hw-source" value="web">Web</label>
+          </div>
+        </div>
+        <div id="hw-form-panel" class="hw-form-panel" hidden>
+          <div class="hw-url-row">
+            <input id="hw-url" type="url" dir="ltr" autocomplete="off" placeholder="Paste the form link" aria-label="Form link">
+            <button type="button" class="btn" data-hw="open-form">Open</button>
+            <button type="button" class="btn primary" data-hw="fill-form">Read and fill</button>
+          </div>
+          <small class="muted">The form opens in a normal window you can see. Maverick fills it there and never submits without your yes.</small>
+        </div>
+        <article id="hw-detail" class="hist-detail hw-detail"></article>
+      </section>
+    </div>
+  </dialog>
+
+  <!-- Memory: the vault's notes in a sidebar; the picked note with its links and backlinks, the graph, or an answer. -->
+  <dialog id="dlg-memory" class="dlg wide hw-dlg" aria-labelledby="mem-title">
+    <header class="dlg-head"><h2 id="mem-title" tabindex="-1" autofocus>Memory</h2><span id="mem-usage" class="meta"></span><button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="dlg-body memory">
+      <aside class="hw-side" aria-label="Notes">
+        <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="mem-q" autocomplete="off" placeholder="Search notes" aria-label="Search notes"></label>
+        <ul id="mem-list" class="hist-list hw-list"></ul>
+      </aside>
+      <section class="hw-main">
+        <div class="hw-top">
+          <div class="seg hw-tabs" role="tablist" aria-label="Memory view">
+            <button type="button" role="tab" data-mem-tab="note" aria-selected="true">Note</button>
+            <button type="button" role="tab" data-mem-tab="graph" aria-selected="false">Graph</button>
+          </div>
+          <form id="mem-ask" class="mem-ask" autocomplete="off"><div class="ask"><input id="mem-ask-q" name="q" placeholder="Ask your memory" aria-label="Ask your memory"><button class="btn primary icon send" aria-label="Ask"><svg class="i"><use href="#i-send"/></svg></button></div></form>
+        </div>
+        <article id="mem-detail" class="hist-detail hw-detail"></article>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-viewer" class="dlg wide" aria-labelledby="view-title">
+    <header class="dlg-head"><h2 id="view-title" tabindex="-1" autofocus></h2><span class="view-nav" hidden><button type="button" class="btn sm icon ghost" data-view="prev" aria-label="Previous page" data-tip="Previous page"><svg class="i sm prev"><use href="#i-chev"/></svg></button><span id="view-page" class="meta"></span><button type="button" class="btn sm icon ghost" data-view="next" aria-label="Next page" data-tip="Next page"><svg class="i sm next"><use href="#i-chev"/></svg></button></span><button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div id="view-body" class="dlg-body viewer"></div>
+  </dialog>
+
+  <dialog id="dlg-summary" class="dlg wide" aria-labelledby="sum-title">
+    <header class="dlg-head"><h2 id="sum-title" tabindex="-1" autofocus>Meeting notes</h2><button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div id="sum-body" class="dlg-body md"></div>
+    <footer class="dlg-foot">
+      <button id="sum-copy" class="btn" disabled><svg class="i"><use href="#i-copy"/></svg><span>Copy notes</span></button>
+      <button id="sum-actions" class="btn" disabled><svg class="i"><use href="#i-check-list"/></svg><span>Action items</span></button>
+      <button id="sum-download" class="btn primary" disabled><svg class="i"><use href="#i-download"/></svg><span>Download .md</span></button>
+    </footer>
+  </dialog>
+
+  <template id="tpl-mini">
+    <div class="mini">
+      <div class="bar">
+        <span class="logo sm" aria-hidden="true"><svg class="i"><use href="#i-logo"/></svg></span>
+        <span class="pill mini-rec"><i class="dot"></i><span>Idle</span><time class="clock"></time><span class="src"></span></span>
+        <span class="share-badge" data-state="checking" hidden><svg class="i xs"><use href="#i-shield"/></svg><span>Checking</span></span>
+        <form class="ask" autocomplete="off">
+          <input name="q" placeholder="Ask Maverick" aria-label="Ask Maverick" aria-keyshortcuts="/">
+          <button class="btn primary icon send" aria-label="Send"><svg class="i sm"><use href="#i-send"/></svg></button>
+        </form>
+        <div class="bar-acts" role="toolbar" aria-label="Copilot actions">
+          <button class="ib src-btn" data-cmd="src-menu" aria-label="Sources" aria-expanded="false"><svg class="i"><use href="#i-wave"/></svg><span class="tip" aria-hidden="true">Sources</span></button>
+          <span class="bar-sep" aria-hidden="true"></span>
+          <button class="ib" data-action="answer" aria-label="Answer" aria-keyshortcuts="Alt+1"><svg class="i"><use href="#i-reply"/></svg><span class="tip" aria-hidden="true">Answer <kbd>Alt 1</kbd></span></button>
+          <button class="ib" data-action="explain" aria-label="Explain screen" aria-keyshortcuts="Alt+2"><svg class="i"><use href="#i-eye"/></svg><span class="tip" aria-hidden="true">Explain screen <kbd>Alt 2</kbd></span></button>
+          <button class="ib" data-action="solve" aria-label="Solve what is on screen"><svg class="i"><use href="#i-solve"/></svg><span class="tip" aria-hidden="true">Solve what is on screen</span></button>
+          <button class="ib" data-action="followup" aria-label="Follow-ups" aria-keyshortcuts="Alt+3"><svg class="i"><use href="#i-help"/></svg><span class="tip" aria-hidden="true">Follow-ups <kbd>Alt 3</kbd></span></button>
+          <button class="ib" data-action="recap" aria-label="Recap" aria-keyshortcuts="Alt+4"><svg class="i"><use href="#i-list"/></svg><span class="tip" aria-hidden="true">Recap <kbd>Alt 4</kbd></span></button>
+          <button class="ib" data-cmd="think" aria-label="Think harder"><svg class="i"><use href="#i-deep"/></svg><span class="tip" aria-hidden="true">Think harder</span></button>
+          <button class="ib" data-cmd="flag" aria-label="Flag this moment" aria-keyshortcuts="Alt+5"><svg class="i"><use href="#i-flag"/></svg><span class="tip" aria-hidden="true">Flag <kbd>Alt 5</kbd></span></button>
+          <span class="bar-sep" aria-hidden="true"></span>
+          <button class="ib" data-cmd="mic" aria-label="Mic"><svg class="i"><use href="#i-mic"/></svg><span class="tip" aria-hidden="true">Mic</span></button>
+          <button class="ib" data-cmd="end" aria-label="End and summarize"><svg class="i"><use href="#i-notes"/></svg><span class="tip" aria-hidden="true">End &amp; summarize</span></button>
+          <button class="ib" data-cmd="theme" aria-label="Switch to light theme"><svg class="i"><use href="#i-sun"/></svg><span class="tip" aria-hidden="true">Light or dark</span></button>
+        </div>
+      </div>
+      <ol class="mini-lines mini-caption" aria-label="Latest transcript line" hidden></ol>
+      <div class="src-pick" role="radiogroup" aria-label="Sources" hidden>
+        <button type="button" role="radio" data-cmd="source" data-source="meeting"><svg class="i sm"><use href="#i-wave"/></svg><span>Meeting</span></button>
+        <button type="button" role="radio" data-cmd="source" data-source="web"><svg class="i sm"><use href="#i-globe"/></svg><span>Web</span></button>
+        <button type="button" role="radio" data-cmd="source" data-source="material"><svg class="i sm"><use href="#i-book"/></svg><span>My material only</span></button>
+      </div>
+      <div class="mini-alert" hidden><svg class="i sm"><use href="#i-alert"/></svg><span class="msg"></span><button type="button" class="btn sm" data-cmd="alert-act"></button></div>
+      <div class="mini-answer"></div>
+      <p class="sr vh" aria-live="polite"></p>
+      <i class="canary" aria-hidden="true"></i>
+    </div>
+  </template>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <p id="sr" class="sr vh" aria-live="polite"></p>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Maverick glass backdrop</title>
+<style>
+  body { margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 1fr; font: 22px/1.45 "Segoe UI", sans-serif; overflow: hidden; }
+  /* neutral on purpose: no colour here that could be mistaken for the app's own. The left half stands in for a photo
+     (a grey, uneven, light-to-dark gradient), the right half for a white slide with grey blocks. */
+  .photo { background: radial-gradient(60% 45% at 28% 22%, #d6d6d6, transparent), radial-gradient(55% 50% at 78% 82%, #121212, transparent), linear-gradient(165deg, #9a9a9a, #505050 55%, #1c1c1c); color: #fff; padding: 36px 48px; }
+  .photo h2 { margin: 0; font-size: 30px; }
+  .doc { background: #fff; color: #222; padding: 36px 56px; }
+  .doc h1 { margin: 0 0 12px; color: #111; font-size: 34px; }
+  mark { background: #e4e4e4; }
+  .row { display: flex; gap: 12px; margin-top: 18px; }
+  .row span { flex: 1; height: 90px; border-radius: 10px; }
+</style></head>
+<body>
+  <div class="photo"><h2>Weekly sync, Teams</h2><p>Priya, Omar, Sarah and 4 others are in this meeting. Omar is sharing his screen.</p></div>
+  <div class="doc">
+    <h1>Q3 launch review</h1>
+    <p>Revenue is <b>up 14%</b> against plan. The team wants to move the product launch to Thursday, and Sarah will send the budget by Friday.</p>
+    <p><mark>Open questions: pricing tiers, the EU rollout, and who owns support.</mark></p>
+    <div class="row"><span style="background:#d4d4d4"></span><span style="background:#9e9e9e"></span><span style="background:#5c5c5c"></span><span style="background:#111"></span></div>
+    <p>Churn fell to 2.1% after the onboarding change. Next review in two weeks, same time.</p>
+  </div>
+</body></html>

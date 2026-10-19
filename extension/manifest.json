@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Maverick hotkeys",
+  "version": "1.0",
+  "description": "Global shortcuts for Maverick, the local meeting copilot. Sends Answer, Explain screen, Follow-ups, Recap and Flag to the open Maverick tab.",
+  "background": { "service_worker": "background.js" },
+  "permissions": ["scripting"],
+  "host_permissions": ["http://localhost:5174/*", "http://127.0.0.1:5174/*"],
+  "commands": {
+    "answer": { "suggested_key": { "default": "Ctrl+Shift+1" }, "description": "Answer", "global": true },
+    "explain": { "suggested_key": { "default": "Ctrl+Shift+2" }, "description": "Explain screen", "global": true },
+    "followup": { "suggested_key": { "default": "Ctrl+Shift+3" }, "description": "Follow-ups", "global": true },
+    "recap": { "suggested_key": { "default": "Ctrl+Shift+4" }, "description": "Recap", "global": true },
+    "flag": { "description": "Flag this moment (Chrome allows 4 suggested keys; set this one in chrome://extensions/shortcuts)", "global": true }
+  }
+}

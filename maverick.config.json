@@ -1,0 +1,13 @@
+{
+  "cli": {
+    "claude": { "args": ["-p", "--model", "{model}"] },
+    "codex": { "args": ["exec", "--model", "{model}"] },
+    "gemini": { "args": ["--model", "{model}"] },
+    "aider": { "args": [] },
+    "opencode": { "args": [] },
+    "qwen": { "args": ["--model", "{model}"] },
+    "llm": { "args": ["-m", "{model}"] },
+    "ollama": { "args": ["run", "{model}"] },
+    "cursor-agent": { "args": [] }
+  }
+}

@@ -1,0 +1,10 @@
+.claude/
+node_modules/
+desktop/app-audio/target/
+.unlazy/
+shots/
+.impeccable/
+.ruff_cache/
+dist/
+release/
+test/fixtures/accuracy/results.json

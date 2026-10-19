@@ -1,0 +1,81 @@
+{
+  "_note": "Demo transcript for test/glass-proof.mjs. The proof shifts it to end a minute ago and serves it as the live meeting (maverick.live) through an in-memory localStorage shim, so real history and settings are never read or written. at = seconds from the start. Answer and Ask read the two minutes before the last line, so the lines from 652 s on carry what the demo questions need.",
+  "title": "Weekly sync, Q3 launch review",
+  "lines": [
+    {
+      "at": 12,
+      "who": "Priya",
+      "text": "Okay, let's start. Omar is sharing the Q3 launch review."
+    },
+    {
+      "at": 31,
+      "who": "Omar",
+      "text": "Revenue is up fourteen percent against plan, mostly from the new onboarding flow."
+    },
+    {
+      "at": 64,
+      "who": "Omar",
+      "text": "And churn fell to 2.1 percent after the onboarding change. That is the lowest this year."
+    },
+    {
+      "at": 130,
+      "who": "Sarah",
+      "text": "I still need two days to finish the budget. I will send it by Friday."
+    },
+    {
+      "at": 182,
+      "who": "Priya",
+      "text": "The team wants to move the launch to Thursday. Does anyone see a problem with that?"
+    },
+    {
+      "at": 265,
+      "who": "You",
+      "text": "Support is the part I'm worried about. Nobody owns it yet."
+    },
+    {
+      "at": 310,
+      "who": "Sarah",
+      "text": "Pricing tiers are still open. We have three options and no decision."
+    },
+    {
+      "at": 362,
+      "who": "Priya",
+      "text": "The EU rollout depends on the legal review, which lands next week."
+    },
+    {
+      "at": 652,
+      "who": "Omar",
+      "text": "Engineering is ready for Thursday if QA signs off on Wednesday."
+    },
+    {
+      "at": 671,
+      "who": "Omar",
+      "text": "I can own support for the first two weeks, then we hand it to Lina's team."
+    },
+    {
+      "at": 690,
+      "who": "Sarah",
+      "text": "Let me be clear: no launch spend goes out until the budget is signed on Friday."
+    },
+    {
+      "at": 708,
+      "who": "Priya",
+      "text": "Fine. So Thursday for the launch, the budget on Friday, and spend waits for the budget."
+    },
+    {
+      "at": 731,
+      "who": "Omar",
+      "text": "For [unclear] EU pricing, we should match the US tiers at first."
+    },
+    {
+      "at": 745,
+      "who": "Priya",
+      "text": "Next review in two weeks, same time."
+    },
+    {
+      "at": 770,
+      "who": "Omar",
+      "text": "Before we wrap up: when can we actually launch? I want a firm date I can give the board."
+    }
+  ]
+}
