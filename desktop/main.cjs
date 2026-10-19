@@ -634,8 +634,9 @@ ipcMain.on('open-url', (e, u) => {
   if (url.protocol === 'http:' || url.protocol === 'https:') shell.openExternal(url.href).catch(() => {});
 });
 // publik API (desktop/publik.cjs): the disclosure the first-run offer shows verbatim, provisioning after the user's yes, and
-// its links. The page gets the card (balance line, cost sentence, links), never the key. Links open only on https publikhq.com.
-ipcMain.handle('publik-info', (e) => (fromMain(e) ? { disclosure: publik.DISCLOSURE, card: publik.card(publik.readCredential()) } : null));
+// its links. The page gets the card (balance line, cost sentence, links) and whether this build has an app token, never
+// the key or the token. Links open only on https publikhq.com.
+ipcMain.handle('publik-info', (e) => (fromMain(e) ? { disclosure: publik.DISCLOSURE, card: publik.card(publik.readCredential()), hasToken: publik.hasAppToken() } : null));
 ipcMain.handle('publik-provision', async (e) => {
   if (!fromMain(e)) return null;
   try { return publik.card(await publik.provision()); } catch (err) { return { error: err.message }; }

@@ -93,6 +93,7 @@ Each task has a role in Settings, Models: Live answers, Reasoning, Vision, Trans
 - The credential file is untrusted: a key that is not a `pk_` string is ignored, and URLs other than https on publikhq.com are dropped.
 - A 402 shows `error.message` and one link, `error.top_up_url`.
 - The app token is read from `PUBLIK_APP_TOKEN` or a `publik-app-token.txt` next to the module or in a parent folder; packaged builds ship it in `resources/` when it exists at build time.
+- Without an app token (`publik-info` reports `hasToken: false`, never the token) the first-run offer and the Settings Yes are not shown, so release builds without one use Ollama or the user's own key. A saved credential or `PUBLIK_API_KEY` still works.
 - `PUBLIK_TEST_BASE_URL` points every publik call at a local mock for `test/publik-proof.mjs`. It is ignored unless its host is 127.0.0.1 and `MAVERICK_TEST_HOOKS=1` is set, and always in a packaged app.
 
 ## Security of the local server
@@ -123,7 +124,7 @@ Run them one at a time; the desktop proofs start the real app on a temporary pro
 
 ```
 node test/selfcheck.mjs            # offline, no network, no model
-node test/publik-proof.mjs         # no network: a mock publik API; proxy, key, SSE, 402, transcription, credential file, self-test
+node test/publik-proof.mjs         # no network: a mock publik API; proxy, key, SSE, 402, transcription, credential file, self-test; then the desktop app with and without an app token
 node test/bridge-kill.mjs          # Windows; a real server on port 5199: CLI arguments refused, Stop and timeout kill the tree
 node test/fit-proof.mjs            # Windows 11, no model: the header and the bar fit at 100, 125 and 150 % scaling
 node test/memory-proof.mjs         # needs Ollama, gemma4:12b and embeddinggemma; Memory notes and graph in the desktop app

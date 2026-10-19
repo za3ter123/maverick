@@ -30,6 +30,8 @@ On first start Maverick looks for Ollama on your computer. Pick whichever of the
 
 If Ollama is not running and you have not set up anything else, the first-run checklist offers publik API, with what it costs and where prompts go. Say No and Maverick shows how to start Ollama instead. Your own connections are never replaced.
 
+The publik option appears only when the build includes a publik app token. Release builds without one use Ollama or your own key.
+
 ## Features
 
 - Live transcript of the meeting and your mic, with speaker labels. Arabic, English, and both mixed in one sentence; Arabic lines read right to left. Optional subtitles translate each line.

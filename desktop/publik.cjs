@@ -44,6 +44,8 @@ function appToken() {
     if (dirname(dir) === dir) return '';
   }
 }
+/** Whether provision() can work. A build without a token offers no publik setup (the page hides it). */
+const hasAppToken = () => appToken().startsWith('pat_');
 
 /** ~/Library/Application Support/publik/apps/<slug>.json, %LOCALAPPDATA%\publik\apps\<slug>.json, ~/.config/publik/apps/<slug>.json */
 function credentialPath() {
@@ -91,7 +93,7 @@ function resolveProvider() {
 /** Call only after the user accepted DISCLOSURE. Throws a readable message; the caller offers the user's own key. */
 async function provision() {
   const token = appToken();
-  if (!token.startsWith('pat_')) throw new Error('This build has no publik API app token. Use your own key for now.');
+  if (!hasAppToken()) throw new Error('This build has no publik API app token. Use your own key for now.');
   const prior = readCredential();
   let installId = prior?.install_id || randomUUID();
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -155,5 +157,5 @@ const card = (c) => (c ? {
 
 module.exports = {
   APP_SLUG, APP_VERSION, DEFAULT_BASE_URL, MODELS, DISCLOSURE, isPublikUrl, baseUrl, credentialPath, readCredential,
-  resolveProvider, provision, selfTest, balanceLine, topUpUrlFrom402, card,
+  resolveProvider, hasAppToken, provision, selfTest, balanceLine, topUpUrlFrom402, card,
 };

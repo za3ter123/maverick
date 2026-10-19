@@ -29,7 +29,7 @@ contextBridge.exposeInMainWorld('maverick', {
   barFocus: () => ipcRenderer.send('bar-focus'),
   showMain: (focus = true) => ipcRenderer.send('show-main', focus !== false), // false: show it without taking the keyboard
   openUrl: (u) => ipcRenderer.send('open-url', String(u)), // http and https only (main.cjs checks)
-  // publik API (main.cjs, desktop/publik.cjs): { disclosure, card }, provision after the user's yes -> card | { error }, and
+  // publik API (main.cjs, desktop/publik.cjs): { disclosure, card, hasToken }, provision after the user's yes -> card | { error }, and
   // its links (https publikhq.com only). No key ever comes back.
   publikInfo: () => ipcRenderer.invoke('publik-info'),
   publikProvision: () => ipcRenderer.invoke('publik-provision'),

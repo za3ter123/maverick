@@ -104,7 +104,7 @@ let deepMissing = false; // set by checkHealth: without it installed, the notes 
 const PUBLIK_OFFER_KEY = 'maverick.publikOffer'; // 'no' once declined
 let ollamaDown = false; // checkHealth: an Ollama the roles need did not answer
 let publikCard = null; // after Yes: { balance, cost_sentence, claim_url, claim_state, add_credit_url } | { error }
-let publikDisclosure = '';
+let publikInfo = null; // { disclosure, card, hasToken } from the main process, asked once
 // The deep model (the Reasoning role) writes the notes and runs Think harder, with any connection. Null when there is no
 // separate deep model. keepAlive 0: Ollama unloads it right after the answer, so the live model gets the GPU back.
 function deepConf() {
@@ -1436,12 +1436,14 @@ function renderChecklist() {
 // First run with Ollama out of reach and no connection the user added: offer publik API (desktop/publik.cjs, main.cjs).
 // The disclosure is the module's, verbatim. Yes provisions in the main process, which keeps the key; the page gets the
 // card: the balance line, the cost sentence verbatim, and the sign-in or add-credit link. No keeps the Ollama banner.
+// A build without a publik app token (hasToken false) never offers it: provisioning could only fail.
 function ownConns() { return settings.connections.some((c) => c.type !== 'ollama' && c.type !== 'claudecode'); }
 async function renderPublikOffer() {
   const box = $('#fr-publik');
   let declined = false;
   try { declined = localStorage.getItem(PUBLIK_OFFER_KEY) === 'no'; } catch { /* storage blocked */ }
-  const show = !!desk?.publikInfo && (!!publikCard || (ollamaDown && !ownConns() && !declined));
+  if (desk?.publikInfo) publikInfo ||= await desk.publikInfo();
+  const show = !!publikInfo?.hasToken && (!!publikCard || (ollamaDown && !ownConns() && !declined));
   box.hidden = !show;
   if (!show) return;
   const btn = (act, label, primary) => `<button type="button" class="btn sm${primary ? ' primary' : ''}" data-publik="${act}">${escapeHtml(label)}</button>`;
@@ -1454,8 +1456,7 @@ async function renderPublikOffer() {
     const link = claimed ? publikCard.add_credit_url : publikCard.claim_url;
     $('#fr-publik-acts').innerHTML = link ? btn(claimed ? 'credit' : 'claim', claimed ? 'Add a plan or pack' : 'Sign in with publik', true) : '';
   } else {
-    publikDisclosure ||= (await desk.publikInfo())?.disclosure || '';
-    $('#fr-publik-text').textContent = publikDisclosure;
+    $('#fr-publik-text').textContent = publikInfo.disclosure || '';
     $('#fr-publik-acts').innerHTML = btn('yes', 'Yes', true) + btn('no', 'No');
   }
 }
@@ -2223,7 +2224,8 @@ async function fillPublikSetup() {
   for (const n of notes) {
     if (!info) n.textContent = 'In a browser, the Maverick server uses PUBLIK_API_KEY or the credential file the desktop app saved.';
     else if (info.card) n.textContent = info.card.balance || 'This computer is set up for publik API.';
-    else n.innerHTML = `${escapeHtml(info.disclosure)} <button type="button" class="btn sm" data-publik-setup-yes>Yes, set it up</button>`;
+    else if (info.hasToken) n.innerHTML = `${escapeHtml(info.disclosure)} <button type="button" class="btn sm" data-publik-setup-yes>Yes, set it up</button>`;
+    else n.textContent = 'This build cannot set up publik API. It works with PUBLIK_API_KEY set, or on a computer already set up for it.';
   }
 }
 form.addEventListener('click', async (e) => {

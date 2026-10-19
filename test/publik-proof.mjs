@@ -3,9 +3,12 @@
 // page never sees it; it forwards only to publik; SSE streams through as it comes; a 402 gives its message and one
 // top-up link; transcription goes as multipart to /audio/transcriptions; malformed credential files are ignored;
 // selfTest prints its line. PUBLIK_TEST_BASE_URL points everything at the mock (honoured only for 127.0.0.1 with MAVERICK_TEST_HOOKS=1).
+// Last, the real desktop app (a throwaway profile, Ollama on a dead port, DOM read over CDP, no real input): with no app
+// token it offers no publik setup, with PUBLIK_APP_TOKEN=pat_test_dummy (env only, nothing is provisioned) it does.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
+import electron from 'electron';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -74,6 +77,56 @@ const raw = (path, init = {}) => fetch(`${BASE}${path}`, { ...init, headers: { '
 const chatBody = (content) => JSON.stringify({ model: 'publik-fast', stream: true, messages: [{ role: 'user', content }] });
 const credFile = publik.credentialPath();
 const writeCred = (obj) => { mkdirSync(dirname(credFile), { recursive: true }); writeFileSync(credFile, typeof obj === 'string' ? obj : JSON.stringify(obj)); };
+
+// The desktop app on a throwaway profile with Ollama at a dead port: what the page renders about publik.
+async function appRun(appToken) {
+  const profile = mkdtempSync(join(tmpdir(), 'maverick-publik-app-'));
+  const env = { ...process.env, MAVERICK_USER_DATA: profile, LOCALAPPDATA: dir };
+  for (const k of ['PUBLIK_APP_TOKEN', 'PUBLIK_API_KEY', 'PUBLIK_TEST_BASE_URL', 'MAVERICK_TEST_HOOKS', 'PORT']) delete env[k];
+  if (appToken) env.PUBLIK_APP_TOKEN = appToken;
+  const app = spawn(electron, ['.', '--remote-debugging-port=9388'], { cwd: ROOT, env, windowsHide: false });
+  try {
+    let ws;
+    for (const t0 = Date.now(); !ws && Date.now() - t0 < 30000; await sleep(300)) {
+      try { ws = (await (await fetch('http://127.0.0.1:9388/json/list')).json()).find((t) => t.url.startsWith('http://127.0.0.1'))?.webSocketDebuggerUrl; } catch { /* starting */ }
+    }
+    assert.ok(ws, 'the app page came up');
+    const sock = new WebSocket(ws);
+    await new Promise((r, j) => { sock.addEventListener('open', r); sock.addEventListener('error', j); });
+    let id = 0;
+    const pending = new Map();
+    sock.addEventListener('message', (e) => { const m = JSON.parse(e.data); pending.get(m.id)?.(m); pending.delete(m.id); });
+    const ev = (expression) => new Promise((resolve) => {
+      const my = ++id;
+      pending.set(my, (m) => resolve(m.result?.exceptionDetails ? null : m.result?.result?.value));
+      sock.send(JSON.stringify({ id: my, method: 'Runtime.evaluate', params: { expression, awaitPromise: true, returnByValue: true } }));
+    });
+    const until = async (expr, ms = 20000) => { for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(300)) { const v = await ev(expr); if (v) return v; } return null; };
+    const seed = async (conns) => {
+      await until('!!document.querySelector("#st-ai")');
+      await ev(`localStorage.setItem('maverick.settings', ${JSON.stringify(JSON.stringify({ connections: conns }))}); setTimeout(() => location.reload(), 50); 1`);
+      await sleep(1500);
+      return until('document.querySelector("#st-ai")?.textContent.includes("Ollama offline")');
+    };
+    const dead = { id: 'ollama', type: 'ollama', url: 'http://127.0.0.1:9' };
+    const out = { ollama: !!(await seed([dead])) };
+    await sleep(1500); // renderPublikOffer asks publik-info once
+    Object.assign(out, await ev(`(async () => ({ info: await window.maverick.publikInfo(), offer: !document.querySelector('#fr-publik').hidden,
+      offerYes: !!document.querySelector('#fr-publik [data-publik="yes"]') }))()`));
+    // Settings with a publik connection (that hides the first-run offer, so a second load)
+    await seed([dead, { id: 'publik', type: 'publik' }]);
+    await ev('document.querySelector("#btn-settings").click(); 1');
+    out.note = (await until('document.querySelector("[data-publik-setup]")?.textContent.trim()')) || '';
+    out.setupYes = await ev('!!document.querySelector("[data-publik-setup-yes]")');
+    sock.close();
+    return out;
+  } finally {
+    const gone = new Promise((r) => app.once('exit', r));
+    app.kill();
+    await Promise.race([gone, sleep(10000)]);
+    rmSync(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 500 }); // its helpers let go a moment later
+  }
+}
 
 try {
   // 0. The page side builds no key and talks only to the local proxy.
@@ -203,6 +256,21 @@ try {
   assert.deepEqual([c.base_url, c.claim_url, c.add_credit_url, c.claim_state, c.balance_micros], ['https://publikhq.com/api/v1', null, null, 'anonymous', null]);
   process.env.PUBLIK_TEST_BASE_URL = MOCK;
   console.log('credential: 6 malformed files ignored (proxy 401), foreign base_url and links replaced or dropped');
+
+  // 9. The real app, once without an app token and once with a dummy one in the environment. publik-info carries hasToken
+  // and never the token; the first-run offer and Settings' "Yes, set it up" are rendered only with a token.
+  rmSync(credFile, { force: true });
+  assert.equal(publik.hasAppToken(), true); // PUBLIK_APP_TOKEN from step 2
+  delete process.env.PUBLIK_APP_TOKEN;
+  assert.equal(publik.hasAppToken(), false);
+  for (const appToken of [null, 'pat_test_dummy']) {
+    const s = await appRun(appToken);
+    assert.ok(!JSON.stringify(s.info).includes('pat_'), 'publik-info never carries the token');
+    assert.equal(s.info.hasToken, !!appToken);
+    assert.equal(s.ollama, true, 'Ollama is out of reach, so only the token decides');
+    assert.deepEqual([s.offer, s.offerYes, s.setupYes], [!!appToken, !!appToken, !!appToken], JSON.stringify(s));
+    console.log(`app ${appToken ? 'token' : 'none '}: publik-info hasToken ${s.info.hasToken}; first-run offer ${s.offer ? 'shown' : 'not rendered'}; Settings "${s.note.slice(0, 50)}..." ${s.setupYes ? 'with' : 'without'} "Yes, set it up"`);
+  }
 
   console.log('\npublik-proof: all checks passed');
 } finally {
