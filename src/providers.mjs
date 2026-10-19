@@ -408,32 +408,34 @@ function unreachable(conf) {
 }
 
 // A publik 402 shows error.message plus exactly one link, error.top_up_url, and only an https publikhq.com one
-// (desktop/publik.cjs, topUpUrlFrom402). The link rides at the end of the error text; splitTopUp takes it back out.
-const TOP_UP = '\nTop up: ';
+// (desktop/publik.cjs, topUpUrlFrom402). The link rides on the Error as .topUp, set only here, for the publik connection;
+// it is never parsed out of error text, so no other provider's reply can make a link.
+export function isPublikTopUp(u) {
+  try { const x = new URL(String(u)); return x.protocol === 'https:' && x.hostname === 'publikhq.com'; } catch { return false; }
+}
 function topUp402(text) {
   let e = null;
   try { e = JSON.parse(text)?.error; } catch { /* not JSON */ }
-  let url = null;
-  try { const u = new URL(e?.top_up_url); if (u.protocol === 'https:' && u.hostname === 'publikhq.com') url = u.href; } catch { /* no link */ }
-  return { message: typeof e?.message === 'string' ? e.message : 'Not enough publik API balance.', url };
-}
-export function splitTopUp(msg) {
-  const i = String(msg).lastIndexOf(TOP_UP);
-  return i < 0 ? { message: String(msg), url: null } : { message: msg.slice(0, i), url: msg.slice(i + TOP_UP.length) };
+  return { message: typeof e?.message === 'string' ? e.message : 'Not enough publik API balance.', url: isPublikTopUp(e?.top_up_url) ? new URL(e.top_up_url).href : null };
 }
 
+// The Error to throw for a failed response: a readable message, plus .topUp for a publik 402.
 async function httpError(res, conf) {
+  if (conf.id === 'publik' && res.status === 402) {
+    const t = topUp402(await res.text().catch(() => ''));
+    return Object.assign(new Error(t.message), { topUp: t.url });
+  }
+  return new Error(await httpMessage(res, conf));
+}
+
+async function httpMessage(res, conf) {
   const p = PROVIDERS[conf.id];
   const body = await res.text().catch(() => '');
   let msg = body;
   try { const j = JSON.parse(body); msg = j.error?.message || (typeof j.error === 'string' ? j.error : '') || j.message || body; } catch { /* plain text */ }
   if (conf.id === 'ollama' && res.status === 404) return `Model "${conf.model}" is not installed in Ollama. Run: ollama pull ${conf.model}`;
   if (p.bridge && res.status === 403) return 'The Maverick server rejected this page. Reload it and try again.';
-  if (conf.id === 'publik') {
-    if (res.status !== 402) return `publik API error ${res.status}: ${String(msg).slice(0, 300)}`;
-    const t = topUp402(body);
-    return t.url ? `${t.message}${TOP_UP}${t.url}` : t.message;
-  }
+  if (conf.id === 'publik') return `publik API error ${res.status}: ${String(msg).slice(0, 300)}`;
   if (res.status === 401 || res.status === 403) return `${p.label} rejected the API key (HTTP ${res.status}).`;
   return `${p.label} error ${res.status}: ${String(msg).slice(0, 300)}`;
 }
@@ -480,7 +482,7 @@ export async function* streamChat(messages, opts = {}, conf) {
     if (e.name === 'AbortError') throw e;
     throw new Error(unreachable(conf));
   }
-  if (!res.ok) throw new Error(await httpError(res, conf));
+  if (!res.ok) throw await httpError(res, conf);
   for await (const line of readLines(res.body)) {
     const text = p.parse(line);
     if (text) yield text;
@@ -536,7 +538,7 @@ async function publikPost(conf, endpoint, body, size, signal) {
     if (e.name === 'AbortError') throw e;
     throw new Error(unreachable(conf));
   }
-  if (!res.ok) throw new Error(await httpError(res, conf));
+  if (!res.ok) throw await httpError(res, conf);
   return res.json();
 }
 

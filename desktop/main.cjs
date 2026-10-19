@@ -27,7 +27,7 @@ if (process.env.MAVERICK_USER_DATA) app.setPath('userData', path.resolve(process
 const ICON = path.join(__dirname, process.platform === 'win32' ? 'icon.ico' : 'icon.png');
 // Windows 11 22H2 (build 22621) and later draw Mica behind the main window; older Windows keeps a solid canvas.
 const GLASS = process.platform === 'win32' && Number(os.release().split('.')[2]) >= 22621;
-// Two bar materials; the owner picks one ("barMaterial" in maverick-desktop.json, or MAVERICK_BAR for a run):
+// Two bar materials; the user picks one ("barMaterial" in maverick-desktop.json, or MAVERICK_BAR for a run):
 //   capsule (default): a transparent window. bar.css draws a 26 px capsule over the live desktop with no blur,
 //     so its text areas are nearly solid. The window is the slab plus a 12 px margin for its shadow and
 //     40 px below for the tooltips; clicks on both pass through to the app underneath.
@@ -70,7 +70,7 @@ state.keys = Object.fromEntries(Object.keys(DEFAULT_KEYS).map((k) => [k, typeof 
 // of screen shares and screenshots. On by default. MAVERICK_CAPTURE_VISIBLE=1 turns it off without touching the saved
 // setting: test/glass-proof.mjs photographs the screen, so it needs the windows to show.
 // While hiding, the main window also leaves the taskbar, and with it Alt+Tab and Win+Tab (the bar never has a taskbar
-// button). The tray icon goes too unless the owner keeps it (Settings, "Also hide the tray icon", on by default).
+// button). The tray icon goes too unless the user keeps it (Settings, "Also hide the tray icon", on by default).
 const hideFromShare = () => state.hideFromShare !== false && process.env.MAVERICK_CAPTURE_VISIBLE !== '1';
 const hideTray = () => hideFromShare() && state.hideTray !== false;
 function applyProtection() {
@@ -826,7 +826,7 @@ ipcMain.handle('rec-chunk', (e, data) => {
 });
 ipcMain.handle('rec-stop', (e, ms) => (fromMain(e) ? { file: recClose(Number.isFinite(ms) ? ms : 0) } : null));
 // The folder, on an explicit "Choose folder" click in Settings. A native dialog is its own window, which a screen share
-// would show; the owner accepted that for this one click (no other native window is opened anywhere).
+// would show; that is accepted for this one click (no other native window is opened anywhere).
 ipcMain.handle('pick-record-dir', async (e) => {
   if (!fromMain(e)) return null;
   const r = await dialog.showOpenDialog(main, { title: 'Save recordings in', defaultPath: recording.recordDir(state.recordDir, app.getPath('videos')), properties: ['openDirectory', 'createDirectory'] });

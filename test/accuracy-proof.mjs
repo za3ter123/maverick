@@ -8,7 +8,7 @@
 //      The visible card is graded against the key; the model's raw reply (teed from the page's fetch) is graded too,
 //      to show what Maverick's own checks caught. A citation is correct only when that page of corpus.json holds the
 //      question's support text.
-//   4. Everything goes to test/fixtures/accuracy/results.json. The owner's real profile must be byte-identical after.
+//   4. Everything goes to test/fixtures/accuracy/results.json. The user's real profile must be byte-identical after.
 // Ports 9355/9251, so a sources-proof or feature-proof run by another builder (9335/9231) is left alone.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

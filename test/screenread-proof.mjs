@@ -9,7 +9,7 @@
 //      reads the slide that changed under the cover once the window shows again.
 //   4. Asking "What target did they point at?" after slide A is gone answers with slide A's number and a [mm:ss] citation.
 //   5. End & summarize: the notes mention slide A's number; History keeps the screen reads.
-//   6. The owner's real profile (%APPDATA%\maverick) is byte-identical afterwards. Only the PIDs started here are killed.
+//   6. The user's real profile (%APPDATA%\maverick) is byte-identical afterwards. Only the PIDs started here are killed.
 // Prints "screen read proof passed" only when every check passed; otherwise exits 1.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

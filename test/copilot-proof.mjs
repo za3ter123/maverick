@@ -8,7 +8,7 @@
 //   9 [mm:ss] and [file p.N] citations open their moment and page, live and in History (recording player seeks)
 //   10 speed meter on the card and in History   11 remote session warning (a second start with SESSIONNAME=RDP-Tcp#0)
 //   13a a not-found card names what is missing   13b a false premise is corrected from the file, with its citation
-// The owner's real profile (%APPDATA%\maverick) must be byte-identical afterwards. Only the PIDs started here are killed.
+// The user's real profile (%APPDATA%\maverick) must be byte-identical afterwards. Only the PIDs started here are killed.
 // Prints "copilot proof passed" only when every check passed; otherwise exits 1.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

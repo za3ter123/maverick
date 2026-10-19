@@ -70,17 +70,27 @@ Plain Ctrl+Enter is left alone because Teams sends messages with it. Inside Mave
 
 Stays on your computer:
 
-- transcripts, answers, notes, History, settings and the Library, in the app's own storage
+- transcripts, answers, notes, History and settings, in the app's own storage
+- your Library files themselves, in the app's own storage
 - API keys, encrypted with your Windows account (DPAPI)
 - Memory notes, in a folder under the app's profile
 - audio and screen recordings, only when you turn recording on in Settings; otherwise audio is never saved to disk
 
 Goes to a cloud provider, only for the tasks you put on one:
 
-- the transcript text, your question and screen frames for answers and screen reads
+- the transcript text, your question and screen frames, for answers and screen reads
 - short audio chunks, if transcription runs in the cloud
-- passages from your Library, when an answer cites your files
-- with publik API, these requests pass through publik's servers to the model. publik says it does not train on them and keeps no request bodies beyond a 24-hour idempotency fingerprint ([publikhq.com/developers](https://publikhq.com/developers)). The publik key is kept by the desktop app at `%LOCALAPPDATA%\publik\apps\maverick.json` and never reaches the app's page.
+- Library pictures and scanned pages, if the Vision role runs in the cloud, so it can read them
+- Library passages, when an answer uses your files, to the Live role's provider
+- worksheet text for Homework, to the provider that drafts the answers
+- with Sources, Web: your question and the meeting context, to Claude through the Claude Code CLI
+
+With publik API:
+
+- the requests above, for every task you put on publik, pass through publik's servers to the model. publik says it does not train on them and keeps no request bodies beyond a 24-hour idempotency fingerprint ([publikhq.com/developers](https://publikhq.com/developers)).
+- when Live answers run on publik, search runs there too: the full text of every file you add to the Library, page by page, the text of your Memory notes when Memory is searched, and each search question are sent to publik to make search vectors. With Ollama this happens on your computer.
+- setting it up sends publik this computer's name, Windows and its CPU type, the Maverick version and a random install ID, which publik uses to link the computer to an account.
+- the publik key is kept by the desktop app at `%LOCALAPPDATA%\publik\apps\maverick.json` and never reaches the app's page.
 
 When every task runs on Ollama, the header says "on this PC". The header also counts how many bytes each meeting sent off your computer.
 

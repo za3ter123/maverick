@@ -99,7 +99,7 @@ const TASKS = {
     // a model without the fact wrote "I'll get you that door code right after we finish this point" (ghost pass 3)
     'Never stall or promise to come back to it later; give the answer itself. If nothing said in this meeting or shown on the screen answers it, say that plainly in one sentence.',
   explain: 'Explain what is on the shared screen in plain words, then list anything on it that matters for this conversation.',
-  // The order the owner asked for: the answer, then short working; for code the full code, then its complexity.
+  // The order: the answer, then short working; for code the full code, then its complexity.
   solve: 'Find the problem on the shared screen: code to write, a bug, a math or logic question, a form to fill, or an error message. ' +
     'Solve it. Never restate or describe the problem. Start with the answer itself in one or two lines, then the working in a few short steps. ' +
     'For code, the first line is the approach in a few words, like "Hash map, one pass, O(n)."; then the full code in one fenced code block, ' +

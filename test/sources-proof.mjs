@@ -11,7 +11,7 @@
 //   4. Web: one current-events question through the Claude Code CLI must cite at least one URL. If the CLI is missing
 //      or not logged in, the step is reported as SKIPPED with the reason, never faked.
 //   5. Static files: PDF.js and its worker are served, every other node_modules path is 404, the CSP is unchanged.
-//   6. The owner's real profile (%APPDATA%\maverick) is byte-identical afterwards.
+//   6. The user's real profile (%APPDATA%\maverick) is byte-identical afterwards.
 // Screenshots (dark and light) of the library, a cited answer, the viewer and a not-found card go to shots/features/.
 // Prints "sources proof passed" only when every check passed; otherwise exits 1.
 import { execFileSync, spawn } from 'node:child_process';

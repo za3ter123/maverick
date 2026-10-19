@@ -3,7 +3,7 @@
 // real desktop app on a temp profile (MAVERICK_USER_DATA). For each scale, over every window width from the minimum (900)
 // to 1440 in 10 px steps, the header's toolbar stays on one row and never runs under the Windows caption buttons (at
 // 150 % its theme button used to drop to a second row). With a meeting an hour and a half in (the widest timer), the
-// bar's "Ask Maverick" placeholder fits its field (it showed "Ask Maver"). The owner's real profile is byte-identical
+// bar's "Ask Maverick" placeholder fits its field (it showed "Ask Maver"). The user's real profile is byte-identical
 // afterwards; only the PIDs started here are killed. Prints "fit proof passed" only when every check passed.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

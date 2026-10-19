@@ -1,5 +1,5 @@
 // node test/feature-proof.mjs   (Windows 11; Ollama with gemma4:12b; starts `ollama serve` if it is not running)
-// Proves the three hackathon features end to end in the real desktop app, twice: at scale 1 and with
+// Proves three core features end to end in the real desktop app, twice: at scale 1 and with
 // --force-device-scale-factor=1.5. Each run gets a new temp profile (MAVERICK_USER_DATA) and MAVERICK_TEST_HOOKS:
 //   1. Hidden badge: with hiding on, the main process's real capture of the screen does not contain the bar's canary
 //      and both badges read Hidden. The positive control: with hiding off (MAVERICK_CAPTURE_VISIBLE=1, then the Settings
@@ -12,7 +12,7 @@
 // Screenshots of each state go to shots/features/ (dark and light, 100 and 150 %), the log to proof-log.txt there.
 // A screen grab cannot see Maverick while it hides, so for the Hidden shots the badge is held (no new checks) and hiding
 // is lifted for the grab only; the badge still shows the result of the real check made just before.
-// The owner's real profile (%APPDATA%\maverick) is fingerprinted before and after and must be byte-identical.
+// The user's real profile (%APPDATA%\maverick) is fingerprinted before and after and must be byte-identical.
 // Prints "feature proof passed" only when every check passed; otherwise exits 1.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -47,7 +47,7 @@ if (!(await ollamaUp())) {
 }
 check(await ollamaUp(), 'Ollama answers on 127.0.0.1:11434');
 
-// ---- the owner's real profile: every file, now and at the end
+// ---- the real profile: every file, now and at the end
 const REAL = join(process.env.APPDATA || '', 'maverick');
 const fingerprint = (dir) => (existsSync(dir) ? readdirSync(dir, { recursive: true, withFileTypes: true }).filter((e) => e.isFile())
   .map((e) => { const f = join(e.parentPath ?? e.path, e.name); return `${f.slice(dir.length)} ${createHash('sha256').update(readFileSync(f)).digest('hex')}`; }).sort().join('\n') : 'absent');
@@ -262,7 +262,7 @@ async function run(scale) {
   check(await until(() => page("(document.querySelector('#preview').videoWidth || 0) > 0"), 15000), `${tag} %: the screen is shared (${await page("document.querySelector('#preview').videoWidth + 'x' + document.querySelector('#preview').videoHeight")})`);
   check(await until(() => bar("!document.querySelector('.ib[data-action=\"solve\"]').disabled"), 5000), `${tag} %: the bar's Solve button is on while the screen is shared`);
   await sleep(1200);
-  // no real key press (the owner's keyboard stays his): the registered hotkey's own handler is called through the test hook
+  // no real key press (the keyboard is never touched): the registered hotkey's own handler is called through the test hook
   log(`skipped: ${tag} %: a real Ctrl+Shift+5 key press needs real keyboard input; the key is checked registered above and its handler is run directly`);
   await M("global.maverickDesk.hotkey('solve'); return 1;");
   const card = () => bar("(() => { const a = document.querySelector('.mini-answer .answer'); return a ? JSON.stringify({ kind: a.dataset.kind, tag: a.querySelector('.tag').textContent, busy: a.getAttribute('aria-busy'), text: a.querySelector('.md').innerText.trim(), error: a.classList.contains('error'), deep: !!a.querySelector('[data-cmd=\"deep\"]'), code: !!a.querySelector('.md pre') }) : 'null'; })()").then(JSON.parse);

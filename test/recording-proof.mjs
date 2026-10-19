@@ -18,7 +18,7 @@
 //      b. Audio only while window A is shared: the meeting tap, which transcription reads too, has A, not B.
 //      c. Fallback: Audio + screen of a silent window C (no audio session): a notice says so and the file has both tones.
 //      Each tone is measured in the saved file by ffmpeg decode and a Goertzel filter (dBFS, from 2 s in).
-//   5. The owner's real profile (%APPDATA%\maverick) is byte-identical afterwards.
+//   5. The user's real profile (%APPDATA%\maverick) is byte-identical afterwards.
 // Prints "recording proof passed" only when every check passed; otherwise exits 1.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -62,7 +62,7 @@ if (!check(!!ffprobe, `ffprobe is installed: ${ffprobe || 'not found on PATH'}`)
 }
 const probe = (file) => JSON.parse(execFileSync(ffprobe, ['-v', 'error', '-show_entries', 'stream=codec_type,codec_name,width,height:format=duration', '-of', 'json', file], { encoding: 'utf8', windowsHide: true }));
 
-// ---- the owner's real profile: every file, now and at the end
+// ---- the real profile: every file, now and at the end
 const REAL = join(process.env.APPDATA || '', 'maverick');
 const fingerprint = (dir) => (existsSync(dir) ? readdirSync(dir, { recursive: true, withFileTypes: true }).filter((e) => e.isFile())
   .map((e) => { const f = join(e.parentPath ?? e.path, e.name); return `${f.slice(dir.length)} ${createHash('sha256').update(readFileSync(f)).digest('hex')}`; }).sort().join('\n') : 'absent');

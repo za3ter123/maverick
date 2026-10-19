@@ -11,7 +11,7 @@
 //      with key A, model A and no image (DeepSeek reads no images). No request carries the other key.
 //   4. Bytes sent off this PC: the mocks run on 127.0.0.1, so a test hook (markRemote) counts their host:port as off this
 //      PC; the meeting's count must equal the bytes of exactly the mock requests, so Ollama counted 0.
-//   5. The owner's real profile (%APPDATA%\maverick) is byte-identical afterwards. Only the PIDs started here are killed.
+//   5. The user's real profile (%APPDATA%\maverick) is byte-identical afterwards. Only the PIDs started here are killed.
 // Never loads the 27b model: reasoning is the mock. Prints "models proof passed" only when every check passed.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

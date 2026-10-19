@@ -6,7 +6,7 @@
 //   composited over the same backdrop) with 3x crops of the icons; Settings and History; an emulated Windows
 //   light/dark flip caught mid-crossfade; the web app at 390 px; computed radii, strokes, hairlines, motion,
 //   reduced motion, focus rings and layout-shift checks; renderer console errors.
-// The app runs in a throwaway profile (MAVERICK_USER_DATA, a new temp folder), so the owner's settings, meetings and
+// The app runs in a throwaway profile (MAVERICK_USER_DATA, a new temp folder), so the real settings, meetings and
 // bar position are never read or written; the real profile's Local Storage is hashed before and after and must be
 // byte-identical. The demo meeting (test/demo-meeting.json) is served through an in-memory localStorage shim.
 // Also: both bar materials (capsule and acrylic) side by side, and a Think harder frame mid-progress.
@@ -38,7 +38,7 @@ const ffmpeg = (...a) => execFileSync('ffmpeg', ['-loglevel', 'error', '-y', ...
 
 const backdrop = spawn(electron, [join(ROOT, 'test', 'glass-backdrop.cjs')], { cwd: ROOT, windowsHide: false });
 await sleep(1500);
-// The owner's real profile: fingerprint every file of its Local Storage now, compare at the end.
+// The real profile: fingerprint every file of its Local Storage now, compare at the end.
 const REAL = join(process.env.APPDATA || '', 'maverick', 'Local Storage');
 const fingerprint = (dir) => (existsSync(dir) ? readdirSync(dir, { recursive: true, withFileTypes: true }).filter((e) => e.isFile())
   .map((e) => { const f = join(e.parentPath ?? e.path, e.name); return `${f.slice(dir.length)} ${createHash('sha256').update(readFileSync(f)).digest('hex')}`; }).sort().join('\n') : 'absent');

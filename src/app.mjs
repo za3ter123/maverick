@@ -25,7 +25,7 @@ import { escapeHtml, holdOpen, linkCites, renderMarkdown, TIME } from './markdow
 import { actionItemsMarkdown, extractActionItems, fitHistory, groundNotes, meetingToMarkdown, migrateStorage, searchMeetings, withFlagSection } from './meetings.mjs';
 import {
   connFields, countSend, defaultModel, egress, embedPublik, firstTokenWithin, isLocalConn, loadModels, ollamaWarm, openKeys, PRESETS, PROVIDERS, PUBLIK_MODELS, remoteForTest, roleConf, roleError, ROLES, sealKeys,
-  splitTopUp, streamChat, transcribe,
+  isPublikTopUp, streamChat, transcribe,
 } from './providers.mjs';
 import {
   dHash, earlierMeetings, earlierMeetingsText, isLikelyQuestion, isPointing, routeAssist, SCREEN_READ_PROMPT, screenAt, screenReadsText, SLIDE_START, slideStep,
@@ -96,7 +96,8 @@ try {
 const conf = (role) => ({ ...roleConf(settings, role), token: TOKEN });
 const tryConf = (role) => { try { return conf(role); } catch { return null; } };
 const shortName = () => { const c = tryConf('live'); return c ? [c.name.replace(/ \(.*?\)/, ''), c.model || c.command].filter(Boolean).join(' ') : 'No assistant'; };
-// Embeddings always run on this PC: the first local Ollama connection, or Ollama's usual address.
+// Where Ollama embeddings run: the first local Ollama connection, or Ollama's usual address. With Live answers on publik
+// API, embeddings go to publik instead (libModels.embed).
 const ollamaUrl = () => settings.connections.find((c) => c.type === 'ollama' && isLocalConn(c))?.url || PROVIDERS.ollama.fields[0].value;
 let deepMissing = false; // set by checkHealth: without it installed, the notes use the answer model
 // the first-run publik API offer (renderPublikOffer)
@@ -1247,7 +1248,7 @@ async function runAction(action, question = '', deep = false, extra = {}) {
       answered();
     }
   } catch (e) {
-    if (e.name === 'AbortError') card.stopped = true; else card.error = e.message;
+    if (e.name === 'AbortError') card.stopped = true; else { card.error = e.message; card.topUp = e.topUp ?? null; }
     if (/can[’']t reach/i.test(e.message)) checkHealth();
   } finally {
     card.streaming = false;
@@ -1260,7 +1261,7 @@ async function runAction(action, question = '', deep = false, extra = {}) {
     const said = card.notFound ? `Not in your material. ${missingLine(card.notFound.missing)}` : card.text;
     if (meeting && said) { meeting.answers.push({ label: card.label, question: card.question, text: said, at: card.at, ...(card.firstAt ? { ttfw: card.firstAt - card.at } : {}) }); saveLive(); }
     renderAnswers();
-    announce(card.error ? `${card.label} failed. ${splitTopUp(card.error).message}` : card.stopped ? `${card.label} stopped.`
+    announce(card.error ? `${card.label} failed. ${card.error}` : card.stopped ? `${card.label} stopped.`
       : `${card.label} ready. ${said.replace(/[*#`>[\]]/g, '').slice(0, 300)}`);
   }
 }
@@ -1282,12 +1283,11 @@ const glueCites = (html) => html.replace(/(<button type="button" class="cite\b[^
 const codeCopy = (html, streaming) => (streaming ? html : html.replaceAll('<pre><code>', '<pre><button type="button" class="tool pre-copy" data-cmd="copypre" aria-label="Copy code" data-tip="Copy code"><svg class="i"><use href="#i-copy"/></svg></button><code>'));
 
 // Error body: what failed and the ways out. When the message already names a command, it is not repeated.
-function failHtml(text) {
-  const { message: msg, url: topUp } = splitTopUp(text); // a publik 402: its message plus one link, its top_up_url
-  if (topUp) {
+function failHtml(msg, topUp = null) {
+  if (isPublikTopUp(topUp)) { // a publik 402: its message plus one link, its top_up_url (providers.mjs, httpError)
     return `<div class="fail" role="alert"><svg class="i"><use href="#i-alert"/></svg><div>
     <p class="title">Maverick couldn’t get an answer</p><p class="msg">${escapeHtml(msg)}</p>
-    <div class="acts"><button class="btn sm primary" data-cmd="url" data-url="${escapeHtml(topUp)}"><span>Add publik balance</span></button></div></div></div>`;
+    <div class="acts"><button class="btn sm primary" data-cmd="topup" data-url="${escapeHtml(topUp)}"><span>Add publik balance</span></button></div></div></div>`;
   }
   const cmd = msg.match(/\b(ollama (?:serve|pull [\w.:/-]+)|node serve\.mjs)/)?.[1];
   const fix = cmd ? ''
@@ -1314,7 +1314,7 @@ const notFoundHtml = (card, acts = true) => '<div class="not-found" role="status
   (acts ? '<div class="acts"><button class="btn sm" data-cmd="library"><svg class="i sm"><use href="#i-plus"/></svg><span>Add a file</span></button></div>' : '') + '</div></div>';
 
 function cardBody(card) {
-  if (card.error) return failHtml(card.error);
+  if (card.error) return failHtml(card.error, card.topUp);
   if (card.notFound) return notFoundHtml(card);
   // a "NOT FOUND" reply is still arriving: it becomes the card above, so the raw line never shows
   if (card.streaming && card.source === 'material' && /^\W*not[ _]?f/i.test(card.text)) return '<div class="skel" aria-hidden="true"><i></i><i></i><i></i></div>';
@@ -1523,6 +1523,7 @@ function wirePanel(root) {
     if (cmd === 'source') return setSource(b.dataset.source);
     if (cmd === 'library') return openLibraryDialog();
     if (cmd === 'url') return openUrl(b.dataset.url);
+    if (cmd === 'topup') return openTopUp(b.dataset.url);
     const card = answers.find((c) => c.id === Number(b.closest('.answer')?.dataset.id));
     if (!card) return;
     if (cmd === 'stop') card.ctrl.abort();
@@ -2044,7 +2045,7 @@ function graphHtml() {
 
 function askBody() {
   const a = memAsk;
-  if (a.error) return `<p class="err">Maverick couldn’t answer from your memory: ${escapeHtml(a.error)}</p>`;
+  if (a.error) return `<p class="err">Maverick couldn’t answer from your memory: ${escapeHtml(a.error)}</p>${topUpButton(a.topUp)}`;
   if (a.notFound) return `<div class="not-found" role="status"><svg class="i"><use href="#i-memory"/></svg><div><p class="title">Not in your notes.</p><p class="msg">${escapeHtml(a.notFound.missing)}</p></div></div>`;
   if (!a.text || (a.streaming && /^\W*not[ _]?f/i.test(a.text))) return SKELETON;
   return glueCites(memChips(renderMarkdown(a.streaming ? holdOpen(missingLines(a.text)) : a.text, { bidi: true }), memFind));
@@ -2078,7 +2079,7 @@ async function askMemory(question) {
     if (g.notFound) a.notFound = { missing: g.notFound.missing.replace(/^Nothing in your files/, 'Nothing in your notes') };
     else a.text = g.text;
   } catch (e) {
-    if (e.name !== 'AbortError') a.error = e.message;
+    if (e.name !== 'AbortError') { a.error = e.message; a.topUp = e.topUp ?? null; }
   } finally {
     a.streaming = false;
     if (memCtrl === ctrl) memCtrl = null;
@@ -2893,6 +2894,14 @@ function toggleSourcePick(btn) {
 function openUrl(u) {
   if (desk) desk.openUrl(u); else window.open(u, '_blank', 'noopener,noreferrer');
 }
+// A publik 402's one link: https publikhq.com only, opened through the main process's publik check (main.cjs, publik-open).
+function openTopUp(u) {
+  if (!isPublikTopUp(u)) return;
+  if (desk?.publikOpen) desk.publikOpen(u); else window.open(u, '_blank', 'noopener,noreferrer');
+}
+// Memory and Homework errors: the same one link, as a button, only when it passes.
+const topUpButton = (u) => (isPublikTopUp(u) ? `<button type="button" class="btn sm primary" data-topup="${escapeHtml(u)}"><span>Add publik balance</span></button>` : '');
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-topup]'); if (b) openTopUp(b.dataset.topup); });
 
 // ---------------------------------------------------------------- the library (main window)
 
@@ -2930,10 +2939,11 @@ function renderDataNotes() {
   const off = (c) => (c && !isLocalConn(c) ? c : null);
   const [vision, live] = [off(v), off(tryConf('live'))];
   $('#lib-note').textContent = `PDF, PNG, JPG, WebP, .docx, .txt and .md. ${!vision && !live ? 'They stay on this PC.'
-    : ['The files stay on this PC.', vision && `Images and scanned pages are read by ${vision.name}, off this PC.`, live && `Passages used in answers go to ${live.name}.`].filter(Boolean).join(' ')}`;
+    : ['The files stay on this PC.', vision && `Images and scanned pages are read by ${vision.name}, off this PC.`, live && `Passages used in answers go to ${live.name}.`,
+      live?.id === 'publik' && 'Search runs on publik API too, so the full text of each file goes there.'].filter(Boolean).join(' ')}`;
   $('#lib-read-note').textContent = v ? `Scanned pages and images are read by ${v.name}${v.model ? `, ${v.model}` : ''}, ${vision ? 'off' : 'on'} this PC.`
     : 'Scanned pages and images need a Vision connection in Settings.';
-  $('#hw-note').textContent = `PDF, photo, .docx, .txt or .md. ${vision ? `Photos and scanned pages are read by ${vision.name}, off this PC.` : 'It stays on this PC.'}`;
+  $('#hw-note').textContent = `PDF, photo, .docx, .txt or .md. ${vision ? `Photos and scanned pages are read by ${vision.name}, off this PC.` : 'It stays on this PC.'}${live?.id === 'publik' ? ' Its questions go to publik API to search your Library.' : ''}`;
 }
 
 const size = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
@@ -3233,7 +3243,7 @@ async function draftAll(ws, only = null) {
       try {
         await draftItem(ws, it, ctrl.signal);
       } catch (e) {
-        if (e.name === 'AbortError') it.stopped = true; else it.error = e.message;
+        if (e.name === 'AbortError') it.stopped = true; else { it.error = e.message; it.topUp = e.topUp ?? null; }
         if (/can[’']t reach/i.test(e.message)) checkHealth();
       } finally {
         finishItem(it);
@@ -3254,7 +3264,7 @@ async function draftAll(ws, only = null) {
 const hwState = (it) => (it.streaming ? `<span class="state">${escapeHtml(it.phase || (it.a ? 'Writing' : 'Thinking'))}</span>`
   : `<span class="when">${it.source === 'web' ? 'Web' : it.a || it.notFound ? 'My material' : ''}</span>`);
 function hwBody(it) {
-  if (it.error) return `<p class="err">Maverick couldn’t draft this: ${escapeHtml(it.error)}</p>`;
+  if (it.error) return `<p class="err">Maverick couldn’t draft this: ${escapeHtml(it.error)}</p>${topUpButton(it.topUp)}`;
   if (it.notFound) return notFoundHtml(it, false);
   if (it.editing) return `<textarea class="hw-edit" rows="7" dir="auto" aria-label="Edit the draft of question ${escapeHtml(it.n)}">${escapeHtml(it.a)}</textarea>`;
   if (!it.a) return it.streaming ? SKELETON : '';

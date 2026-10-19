@@ -24,7 +24,7 @@
 //      is refused, naming both, and posts nothing. The test then attaches a file and answers the blank one in the form
 //      window; "yes" posts exactly once, with the picks, the typed text and the file name, and the review shows the file
 //      read back. A second submit is refused and posts nothing.
-//   8. The owner's real profile (%APPDATA%\maverick) is byte-identical afterwards.
+//   8. The user's real profile (%APPDATA%\maverick) is byte-identical afterwards.
 // Prints "PASS: homework proof passed" only when every check passed; otherwise exits 1.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

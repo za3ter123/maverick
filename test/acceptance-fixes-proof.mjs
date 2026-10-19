@@ -27,7 +27,7 @@
 //      them, and their first line says why.
 //   E. The Arabic Ask with no meeting (1): no transcript placeholder in its prompt or its card.
 //   F. A citation of the screen read at 00:01 shows that read, not the 00:11 transcript line.
-// The owner's real profile must be byte-identical afterwards. Prints "acceptance fixes passed" only if every check passed.
+// The user's real profile must be byte-identical afterwards. Prints "acceptance fixes passed" only if every check passed.
 // Ports 9366/9262, so the other proofs and a capture session (9371/9271) are left alone.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

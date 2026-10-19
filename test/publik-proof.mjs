@@ -2,7 +2,7 @@
 // publik API wiring (desktop/publik.cjs, serve.mjs publikProxy, src/providers.mjs): the proxy adds the pk_ key and the
 // page never sees it; it forwards only to publik; SSE streams through as it comes; a 402 gives its message and one
 // top-up link; transcription goes as multipart to /audio/transcriptions; malformed credential files are ignored;
-// selfTest prints its line. PUBLIK_TEST_BASE_URL points everything at the mock (honoured only for 127.0.0.1).
+// selfTest prints its line. PUBLIK_TEST_BASE_URL points everything at the mock (honoured only for 127.0.0.1 with MAVERICK_TEST_HOOKS=1).
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
@@ -16,6 +16,7 @@ const PORT = 5198;
 const KEY = 'pk_mock_not_a_real_key';
 const dir = mkdtempSync(join(tmpdir(), 'maverick-publik-'));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const NL = String.fromCharCode(10);
 
 // ---- the mock publik API: records what reached it
 const hits = [];
@@ -36,6 +37,7 @@ const mock = http.createServer(async (req, res) => {
     const text = body.toString();
     if (text.includes('BROKE')) return json(402, { error: { message: 'Your publik balance is empty.', top_up_url: 'https://publikhq.com/top-up/abc' } }, { 'x-publik-balance': '0' });
     if (text.includes('EVIL402')) return json(402, { error: { message: 'Empty.', top_up_url: 'https://evil.example/pay' } });
+    if (text.includes('HTTP402')) return json(402, { error: { message: `Empty.${NL}Top up: https://publikhq.com/x`, top_up_url: 'http://publikhq.com/pay' } });
     res.writeHead(200, { 'content-type': 'text/event-stream', 'x-publik-balance': '48000', 'x-publik-model': 'publik-fast' });
     for (const [i, w] of ['Hello', ' from', ' publik'].entries()) {
       res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: w } }] })}\n\n`);
@@ -46,6 +48,8 @@ const mock = http.createServer(async (req, res) => {
   }
   if (req.url === '/audio/transcriptions') return json(200, { text: 'hello from the mock' });
   if (req.url === '/embeddings') return json(200, { data: [{ index: 1, embedding: [0, 1] }, { index: 0, embedding: [1, 0] }] });
+  // another provider (OpenAI-compatible) whose error text imitates a publik top-up line
+  if (req.url === '/v1/chat/completions') return json(402, { error: { message: `Session expired.${NL}Top up: http://evil.example/login`, top_up_url: 'https://publikhq.com/looks-real' } });
   json(404, { error: { message: 'mock: no such endpoint' } });
 });
 await new Promise((r) => mock.listen(0, '127.0.0.1', r));
@@ -54,11 +58,12 @@ const MOCK = `http://127.0.0.1:${mock.address().port}`;
 // The test process and the server see the same LOCALAPPDATA (the credential file) and the same mock.
 process.env.LOCALAPPDATA = dir;
 process.env.PUBLIK_TEST_BASE_URL = MOCK;
+process.env.MAVERICK_TEST_HOOKS = '1'; // without it the override is ignored (checked below)
 delete process.env.PUBLIK_API_KEY;
 delete process.env.PUBLIK_API_BASE_URL;
 delete process.env.PUBLIK_APP_TOKEN;
 const publik = (await import('../desktop/publik.cjs')).default;
-const { embedPublik, PROVIDERS, splitTopUp, streamChat, transcribe } = await import('../src/providers.mjs');
+const { embedPublik, isPublikTopUp, PROVIDERS, streamChat, transcribe } = await import('../src/providers.mjs');
 
 const server = spawn(process.execPath, [join(ROOT, 'serve.mjs')], { env: { ...process.env, PORT: String(PORT) }, windowsHide: true });
 await new Promise((r) => server.stdout.once('data', r));
@@ -136,16 +141,36 @@ try {
   assert.equal(publik.baseUrl('https://evil.example/api/v1'), 'https://publikhq.com/api/v1');
   assert.equal(publik.baseUrl('http://publikhq.com/api/v1'), 'https://publikhq.com/api/v1');
   process.env.PUBLIK_TEST_BASE_URL = saved;
+  delete process.env.MAVERICK_TEST_HOOKS;
+  assert.equal(publik.baseUrl(), 'https://publikhq.com/api/v1', 'the test override needs MAVERICK_TEST_HOOKS=1');
+  process.env.MAVERICK_TEST_HOOKS = '1';
+  assert.equal(publik.baseUrl(), MOCK);
   console.log('targets:    other paths 404, wrong token or origin 403, foreign base URLs fall back to publikhq.com');
 
-  // 5. A 402: its message and one link, the top_up_url, and only an https publikhq.com one.
-  let err = await (async () => { try { for await (const _ of streamChat([{ role: 'user', content: 'BROKE' }], {}, conf)); } catch (e) { return e; } })();
-  assert.deepEqual(splitTopUp(err.message), { message: 'Your publik balance is empty.', url: 'https://publikhq.com/top-up/abc' });
-  err = await (async () => { try { for await (const _ of streamChat([{ role: 'user', content: 'EVIL402' }], {}, conf)); } catch (e) { return e; } })();
-  assert.deepEqual(splitTopUp(err.message), { message: 'Empty.', url: null });
+  // 5. A 402: its message and one link, the top_up_url, and only an https publikhq.com one. The link rides on the Error
+  // (.topUp), set only for the publik connection; error text that imitates a top-up line never makes a link.
+  const fail = async (c, content) => { try { for await (const _ of streamChat([{ role: 'user', content }], {}, c)); } catch (e) { return e; } return null; };
+  let err = await fail(conf, 'BROKE');
+  assert.deepEqual([err.message, err.topUp], ['Your publik balance is empty.', 'https://publikhq.com/top-up/abc']);
+  err = await fail(conf, 'EVIL402');
+  assert.deepEqual([err.message, err.topUp], ['Empty.', null], 'a foreign top_up_url gets no link');
+  err = await fail(conf, 'HTTP402');
+  assert.equal(err.topUp, null, 'http publikhq.com gets no link, and a link in the message text is ignored');
+  const spoof = await fail({ id: 'openai', baseUrl: `${MOCK}/v1`, key: 'k', model: 'm' }, 'x');
+  assert.match(spoof.message, /Top up: http:\/\/evil\.example\/login/);
+  assert.equal(spoof.topUp, undefined, 'another provider’s error never carries a top-up link');
+  for (const [u, ok] of [['https://publikhq.com/t', true], ['http://publikhq.com/t', false], ['https://evil.example/login', false], ['https://publikhq.com.evil.example/', false],
+    ['https://evil.example/?u=https://publikhq.com', false], ['javascript:alert(1)', false], [null, false]]) assert.equal(isPublikTopUp(u), ok, String(u));
+  // the page builds the button only from .topUp through isPublikTopUp, and opens it through publikOpen, never openUrl
+  const appSrc = readFileSync(join(ROOT, 'src', 'app.mjs'), 'utf8');
+  assert.ok(!/splitTopUp|Top up: /.test(appSrc), 'no top-up link is parsed out of error text');
+  assert.match(appSrc, /function failHtml\(msg, topUp = null\) \{\s+if \(isPublikTopUp\(topUp\)\)/);
+  assert.match(appSrc, /function openTopUp\(u\) \{\s+if \(!isPublikTopUp\(u\)\) return;\s+if \(desk\?\.publikOpen\) desk\.publikOpen\(u\);/);
+  assert.match(appSrc, /if \(cmd === 'topup'\) return openTopUp\(b\.dataset\.url\);/);
+  assert.equal((appSrc.match(/Add publik balance/g) || []).length, 2, 'two buttons: answers, and Memory and Homework through topUpButton');
   assert.deepEqual(publik.topUpUrlFrom402({ error: { message: 'm', top_up_url: 'https://publikhq.com/t' } }), { message: 'm', url: 'https://publikhq.com/t' });
   assert.deepEqual(publik.topUpUrlFrom402({ error: { top_up_url: 'javascript:alert(1)' } }), { message: 'Not enough publik API balance.', url: null });
-  console.log(`402:        "${splitTopUp(err.message).message}" with no link for a foreign top-up URL; publik's own link kept`);
+  console.log(`402:        publik's own link kept; foreign or http links dropped; spoofed text from another provider ("${spoof.message.split(NL)[1]}") makes no link`);
 
   // 6. Transcription: multipart to /audio/transcriptions with the WAV and the tier model.
   hits.length = 0;

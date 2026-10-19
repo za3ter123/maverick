@@ -12,7 +12,7 @@
 //   5. Homework with an empty Library drafts a question the lecture answered (9.8 m/s²), citing the meeting note; its
 //      homework note links to the meeting.
 //   6. Screenshots of the note view and the graph, dark and light, at a 1280 px window (SHOTS_DIR, or a temp folder).
-//   7. The owner's real profile (%APPDATA%\maverick) is byte-identical afterwards.
+//   7. The user's real profile (%APPDATA%\maverick) is byte-identical afterwards.
 // Prints "PASS: memory proof passed" only when every check passed; otherwise exits 1.
 import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';

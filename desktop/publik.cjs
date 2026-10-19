@@ -21,9 +21,12 @@ const DISCLOSURE =
 const isPublikUrl = (u) => {
   try { const x = new URL(String(u)); return x.protocol === 'https:' && x.hostname === 'publikhq.com'; } catch { return false; }
 };
-// test/publik-proof.mjs only: PUBLIK_TEST_BASE_URL points every call at a local mock, and is ignored unless its host is 127.0.0.1.
+// test/publik-proof.mjs only: PUBLIK_TEST_BASE_URL points every call at a local mock. It is ignored unless its host is
+// 127.0.0.1 and MAVERICK_TEST_HOOKS=1 (the proofs' flag), and always in a packaged app.
+const packaged = () => { try { return require('electron').app?.isPackaged === true; } catch { return false; } };
 function testBase() {
   const v = process.env.PUBLIK_TEST_BASE_URL;
+  if (!v || process.env.MAVERICK_TEST_HOOKS !== '1' || packaged()) return null;
   try { return v && new URL(v).hostname === '127.0.0.1' ? v.replace(/\/+$/, '') : null; } catch { return null; }
 }
 /** The base URL every request goes to: the test mock, else `wanted` if it is https on publikhq.com, else the default. */

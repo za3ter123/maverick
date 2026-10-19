@@ -312,7 +312,7 @@ await check('share check canary: found where drawn, never invented', async () =>
   }
   const light = img(W, H); draw(light, W, 30, 20, 2, 2, CANARY, 72, 28);
   assert.ok(findCanary(light, W, H, { x: 30, y: 20, cell: 2, h: 2 }).found, 'the light theme greys');
-  // desktopCapturer on the owner's PC returns about 1.6 x + 6 of each value and clips from 156 up (measured). The bar.css
+  // desktopCapturer on the test PC returns about 1.6 x + 6 of each value and clips from 156 up (measured). The bar.css
   // greys must survive that; the first light greys (255 and 200) both came back white, which would have read as hidden.
   const capture = (px) => px.map((v, i) => (i % 4 === 3 ? v : Math.min(255, Math.round(1.6 * v + 6))));
   for (const [theme, hi, lo] of [['dark', 64, 24], ['light', 72, 28]]) {
@@ -1172,7 +1172,7 @@ await check('no native popups that a screen share would see', async () => {
     assert.doesNotMatch(all, re, String(re));
   }
   assert.match(src('styles.css'), /\.dlg select, \.dlg ::picker\(select\) \{ appearance: base-select; \}/, 'dropdowns are drawn in the page');
-  // The one exception the owner accepted: the recordings folder dialog, only on the explicit Choose folder click.
+  // The one accepted exception: the recordings folder dialog, only on the explicit Choose folder click.
   assert.doesNotMatch(all, /showSaveDialog|showOpenDialogSync|showSaveDialogSync/);
   assert.equal(all.match(/showOpenDialog\b/g)?.length, 1, 'one native dialog in the app');
   assert.match(src('desktop/main.cjs'), /ipcMain\.handle\('pick-record-dir'[^\n]*\n[^\n]*\n\s+const r = await dialog\.showOpenDialog\(/, 'and it is the recordings folder picker');

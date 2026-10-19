@@ -93,7 +93,7 @@ Each task has a role in Settings, Models: Live answers, Reasoning, Vision, Trans
 - The credential file is untrusted: a key that is not a `pk_` string is ignored, and URLs other than https on publikhq.com are dropped.
 - A 402 shows `error.message` and one link, `error.top_up_url`.
 - The app token is read from `PUBLIK_APP_TOKEN` or a `publik-app-token.txt` next to the module or in a parent folder; packaged builds ship it in `resources/` when it exists at build time.
-- `PUBLIK_TEST_BASE_URL` points every publik call at a local mock for `test/publik-proof.mjs`. It is ignored unless its host is 127.0.0.1.
+- `PUBLIK_TEST_BASE_URL` points every publik call at a local mock for `test/publik-proof.mjs`. It is ignored unless its host is 127.0.0.1 and `MAVERICK_TEST_HOOKS=1` is set, and always in a packaged app.
 
 ## Security of the local server
 
